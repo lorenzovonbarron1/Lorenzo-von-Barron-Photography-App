@@ -15,7 +15,7 @@ export default function PortfolioPage() {
         <span className="eyebrow eyebrow--gold">Selected Work</span>
         <h1 className="page-header__title">Portfolio</h1>
         <p className="page-header__intro">
-          Organised by discipline. Each body of work opens directly into its LYNK enquiry — the
+          Organized by discipline. Each body of work opens directly into its LYNK enquiry — the
           categories here and there stay in step.
         </p>
       </header>
