@@ -255,6 +255,10 @@ h1, h2, h3, p { overflow-wrap: break-word; word-break: normal; }
   height: 100%;
   object-fit: cover;
   filter: saturate(0.88) contrast(1.02) brightness(0.94);
+  /* keep alt text invisible while a failed image waits for the
+     placeholder to take over — no broken-image flash */
+  color: transparent;
+  font-size: 0;
 }
 .ed-image__veil {
   position: absolute;
@@ -456,6 +460,13 @@ h1, h2, h3, p { overflow-wrap: break-word; word-break: normal; }
   .work-reel__item { width: 86vw; }
   .work-reel__item .ed-image { height: 56vh; min-height: 300px; }
   .work-reel__arrow { display: none; }
+  .work-reel__caption {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    max-width: 34ch;
+  }
+  .work-reel__title { white-space: normal; }
 }
 
 /* ── The Creed ─────────────────────────────────────────────── */
