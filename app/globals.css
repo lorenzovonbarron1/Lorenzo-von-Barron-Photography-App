@@ -410,7 +410,8 @@ h1, h2, h3, p { overflow-wrap: break-word; word-break: normal; }
 .work-reel__caption {
   display: flex;
   align-items: baseline;
-  gap: 16px;
+  flex-wrap: wrap;
+  gap: 6px 16px;
   padding: 18px 2px 0;
 }
 .work-reel__title {
