@@ -5,8 +5,11 @@ import { LYNK_COPY, BUDGET_SCOPE_OPTIONS } from "@/lib/lynk-data";
 import {
   SUBMISSION_TYPES,
   buildSubmission,
-  persistSubmission,
+  submitSubmission,
 } from "@/lib/lynk-submissions";
+
+const DELIVERY_ERROR =
+  "The brief didn’t go through. Try again — or email studio@lorenzovonbarron.com and we’ll take it from there.";
 
 // One package tile: scope, price, deliverables, and both enquiry
 // flows (booking brief + budget offer) opened in place so the
@@ -15,6 +18,13 @@ export default function PackageTile({ pkg, categoryLabel }) {
   // null | "booking" | "budget" | "sent-booking" | "sent-budget"
   const [mode, setMode] = useState(null);
   const [scope, setScope] = useState([]);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState(null);
+
+  const toggleMode = (next) => {
+    setError(null);
+    setMode(mode === next ? null : next);
+  };
 
   const toggleScope = (option) =>
     setScope((prev) =>
@@ -28,19 +38,29 @@ export default function PackageTile({ pkg, categoryLabel }) {
     return fields;
   };
 
+  const send = async (record, sentMode) => {
+    setSending(true);
+    setError(null);
+    const result = await submitSubmission(record);
+    setSending(false);
+    if (result.ok) {
+      setMode(sentMode);
+    } else {
+      setError(DELIVERY_ERROR);
+    }
+  };
+
   const submitBooking = (event) => {
     event.preventDefault();
     const fields = readForm(event.currentTarget);
-    persistSubmission(buildSubmission(SUBMISSION_TYPES.BOOKING, pkg, fields));
-    setMode("sent-booking");
+    send(buildSubmission(SUBMISSION_TYPES.BOOKING, pkg, fields), "sent-booking");
   };
 
   const submitBudget = (event) => {
     event.preventDefault();
     const fields = readForm(event.currentTarget);
     fields.scope_flexibility = scope;
-    persistSubmission(buildSubmission(SUBMISSION_TYPES.BUDGET_OFFER, pkg, fields));
-    setMode("sent-budget");
+    send(buildSubmission(SUBMISSION_TYPES.BUDGET_OFFER, pkg, fields), "sent-budget");
   };
 
   const primaryLabel = pkg.enquiryOnly ? LYNK_COPY.primaryCta : LYNK_COPY.bookPackage;
@@ -82,13 +102,13 @@ export default function PackageTile({ pkg, categoryLabel }) {
         <div className="lynk-tile__actions">
           <button
             className={`lynk-btn${mode === "booking" ? " is-active" : ""}`}
-            onClick={() => setMode(mode === "booking" ? null : "booking")}
+            onClick={() => toggleMode("booking")}
           >
             {primaryLabel}
           </button>
           <button
             className={`lynk-btn lynk-btn--ghost${mode === "budget" ? " is-active" : ""}`}
-            onClick={() => setMode(mode === "budget" ? null : "budget")}
+            onClick={() => toggleMode("budget")}
           >
             {LYNK_COPY.budgetCta}
           </button>
@@ -136,8 +156,9 @@ export default function PackageTile({ pkg, categoryLabel }) {
               <textarea name="notes" rows={2} />
             </label>
           </div>
-          <button type="submit" className="lynk-btn lynk-btn--submit">
-            {LYNK_COPY.sendMission}
+          {error && <p className="lynk-form__error" role="alert">{error}</p>}
+          <button type="submit" className="lynk-btn lynk-btn--submit" disabled={sending}>
+            {sending ? "Sending…" : LYNK_COPY.sendMission}
           </button>
         </form>
       )}
@@ -243,8 +264,9 @@ export default function PackageTile({ pkg, categoryLabel }) {
             </div>
           </fieldset>
 
-          <button type="submit" className="lynk-btn lynk-btn--submit">
-            {LYNK_COPY.sendOffer}
+          {error && <p className="lynk-form__error" role="alert">{error}</p>}
+          <button type="submit" className="lynk-btn lynk-btn--submit" disabled={sending}>
+            {sending ? "Sending…" : LYNK_COPY.sendOffer}
           </button>
         </form>
       )}

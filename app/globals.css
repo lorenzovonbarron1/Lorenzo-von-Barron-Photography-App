@@ -1441,6 +1441,20 @@ a.site-footer__left:hover { color: var(--white); }
   background: rgba(184, 154, 98, 0.1);
 }
 
+.lynk-form__error {
+  margin: 26px 0 0;
+  max-width: 52ch;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #c99a86;
+  text-wrap: pretty;
+}
+.lynk-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
+}
+
 /* Confirmations */
 .lynk-confirm {
   margin-top: clamp(28px, 4.5vh, 40px);
