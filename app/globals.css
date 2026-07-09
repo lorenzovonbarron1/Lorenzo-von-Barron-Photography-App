@@ -21,6 +21,12 @@
   --gutter: clamp(20px, 4.5vw, 44px);
   --header-height: 76px;
   --measure: 62ch;
+
+  /* iOS notch / dynamic island / home indicator (0 elsewhere) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 * { box-sizing: border-box; }
@@ -31,6 +37,7 @@ html {
 
 body {
   margin: 0;
+  min-height: 100svh;
   background: var(--black);
   color: var(--white);
   font-family: var(--font-sans);
@@ -132,7 +139,10 @@ h1, h2, h3, p { overflow-wrap: break-word; word-break: normal; }
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: clamp(20px, 3.4vh, 30px) var(--gutter);
+  padding: calc(clamp(20px, 3.4vh, 30px) + var(--safe-top))
+    calc(var(--gutter) + var(--safe-right))
+    clamp(20px, 3.4vh, 30px)
+    calc(var(--gutter) + var(--safe-left));
   mix-blend-mode: difference;
   pointer-events: none;
 }
@@ -166,7 +176,10 @@ h1, h2, h3, p { overflow-wrap: break-word; word-break: normal; }
   background: var(--black);
   display: flex;
   flex-direction: column;
-  padding: calc(var(--header-height) + 16px) var(--gutter) clamp(32px, 6vh, 60px);
+  padding: calc(var(--header-height) + 16px + var(--safe-top))
+    calc(var(--gutter) + var(--safe-right))
+    calc(clamp(32px, 6vh, 60px) + var(--safe-bottom))
+    calc(var(--gutter) + var(--safe-left));
   animation: lvb-fadein 0.5s ease both;
   overflow-y: auto;
 }
@@ -354,7 +367,7 @@ h1, h2, h3, p { overflow-wrap: break-word; word-break: normal; }
 }
 .hero__cue {
   position: absolute;
-  bottom: 30px;
+  bottom: calc(30px + var(--safe-bottom));
   left: 0; right: 0;
   z-index: 3;
   display: flex;
@@ -557,7 +570,7 @@ h1, h2, h3, p { overflow-wrap: break-word; word-break: normal; }
 
 /* ── Footer ────────────────────────────────────────────────── */
 .site-footer {
-  padding: clamp(48px, 8vh, 90px) var(--gutter) 54px;
+  padding: clamp(48px, 8vh, 90px) var(--gutter) calc(54px + var(--safe-bottom));
   border-top: 1px solid var(--line);
   display: flex;
   flex-wrap: wrap;
@@ -871,11 +884,46 @@ a.site-footer__left:hover { color: var(--white); }
   gap: 8px;
 }
 
+/* ── Offline shell ─────────────────────────────────────────── */
+.offline {
+  min-height: 100svh;
+  padding: calc(var(--header-height) + var(--safe-top) + clamp(56px, 12vh, 180px))
+    var(--gutter)
+    calc(clamp(80px, 14vh, 160px) + var(--safe-bottom));
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.offline .eyebrow { margin-bottom: clamp(28px, 5vh, 40px); }
+.offline__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: clamp(32px, 6vw, 84px);
+  line-height: 1.12;
+  max-width: 22ch;
+  text-wrap: pretty;
+}
+.offline__title em {
+  font-style: italic;
+  color: var(--gold-bright);
+}
+.offline__rule {
+  display: block;
+  width: 46px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.6;
+  margin-top: clamp(40px, 7vh, 64px);
+}
+
 /* ── Emily concierge ───────────────────────────────────────── */
 .emily-trigger {
   position: fixed;
-  bottom: 26px;
-  right: 26px;
+  bottom: calc(26px + var(--safe-bottom));
+  right: calc(26px + var(--safe-right));
   z-index: 50;
   background: rgba(5, 5, 5, 0.6);
   border: 1px solid rgba(184, 154, 98, 0.4);
@@ -902,8 +950,8 @@ a.site-footer__left:hover { color: var(--white); }
 }
 @media (max-width: 480px) {
   .emily-trigger {
-    bottom: 16px;
-    right: 16px;
+    bottom: calc(16px + var(--safe-bottom));
+    right: calc(16px + var(--safe-right));
     padding: 8px 14px;
     font-size: 10px;
     letter-spacing: 0.2em;
@@ -911,11 +959,11 @@ a.site-footer__left:hover { color: var(--white); }
 }
 .emily-panel {
   position: fixed;
-  bottom: 26px;
-  right: 26px;
+  bottom: calc(26px + var(--safe-bottom));
+  right: calc(26px + var(--safe-right));
   z-index: 70;
   width: min(380px, calc(100vw - 32px));
-  max-height: calc(100svh - 52px);
+  max-height: calc(100svh - 52px - var(--safe-bottom) - var(--safe-top));
   overflow-y: auto;
   background: #0d0c0a;
   border: 1px solid rgba(184, 154, 98, 0.22);
@@ -924,7 +972,11 @@ a.site-footer__left:hover { color: var(--white); }
   animation: lvb-panel 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @media (max-width: 480px) {
-  .emily-panel { bottom: 16px; right: 16px; padding: 28px 24px 24px; }
+  .emily-panel {
+    bottom: calc(16px + var(--safe-bottom));
+    right: calc(16px + var(--safe-right));
+    padding: 28px 24px 24px;
+  }
 }
 .emily-panel__head {
   display: flex;
