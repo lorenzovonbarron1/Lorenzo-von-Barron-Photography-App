@@ -65,8 +65,8 @@ export default function SiteChrome({ children }) {
             <div className="menu-overlay__note">
               <span className="menu-overlay__note-label">Enquiries</span>
               <span className="menu-overlay__note-copy">
-                All bookings are handled through LYNK. Choose a discipline in the Portfolio to
-                open its enquiry.
+                All bookings are handled through LYNK — pricing, packages, and the brief live
+                there. Choose a discipline and send the mission.
               </span>
             </div>
             <button className="pill-button" onClick={() => setMenuOpen(false)}>

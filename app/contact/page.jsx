@@ -1,5 +1,5 @@
 import Footer from "@/components/Footer";
-import { LYNK_HOME } from "@/lib/site-data";
+import { LYNK_BASE } from "@/lib/site-data";
 
 export const metadata = {
   title: "Contact — Lorenzo von Barron Photography",
@@ -18,12 +18,12 @@ export default function ContactPage() {
         <div className="contact__grid">
           <div>
             <span className="contact__label">Bookings</span>
-            <a href={LYNK_HOME} className="contact__link">
+            <a href={LYNK_BASE} className="contact__link">
               Book via LYNK →
             </a>
             <p className="contact__note">
-              Every discipline routes to its own LYNK enquiry from the Portfolio. Choose the
-              frame, open the brief, and send the mission.
+              Every discipline routes to its own LYNK enquiry. Choose the frame, open the
+              brief, and send the mission.
             </p>
           </div>
           <div>
