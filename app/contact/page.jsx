@@ -17,12 +17,12 @@ export default function ContactPage() {
         <div className="contact__grid">
           <div>
             <span className="contact__label">Bookings</span>
-            <a href="https://lynk.example/book" className="contact__link">
+            <a href="/lynk/" className="contact__link">
               Book via LYNK →
             </a>
             <p className="contact__note">
-              Every discipline routes to its own LYNK enquiry from the Portfolio. Choose the
-              frame, open the brief, and send the mission.
+              Every discipline routes to its own LYNK enquiry. Choose the frame, open the
+              brief, and send the mission.
             </p>
           </div>
           <div>
