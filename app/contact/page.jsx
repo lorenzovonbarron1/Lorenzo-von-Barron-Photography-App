@@ -1,4 +1,5 @@
 import Footer from "@/components/Footer";
+import { LYNK_BASE } from "@/lib/site-data";
 
 export const metadata = {
   title: "Contact — Lorenzo von Barron Photography",
@@ -17,7 +18,7 @@ export default function ContactPage() {
         <div className="contact__grid">
           <div>
             <span className="contact__label">Bookings</span>
-            <a href="/lynk/" className="contact__link">
+            <a href={LYNK_BASE} className="contact__link">
               Book via LYNK →
             </a>
             <p className="contact__note">
