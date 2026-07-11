@@ -7,6 +7,12 @@ import { HERO } from "@/lib/site-data";
 // Full-screen cinematic hero: autoplaying reel with poster fallback,
 // dark shade, the brand statement, and a quiet scroll cue.
 // The site opens like a film, not a homepage.
+//
+// Future asset: the LYNK Superleggera rotating-object hero (iPhone
+// 12 + Moment 58mm lens) is documented as HERO_ROTATING_OBJECT in
+// lib/site-data.js. Swap the HERO import below for that constant
+// once the asset lands — this component's video/poster/fallback
+// wiring already matches its spec, no other changes needed here.
 export default function HeroReel() {
   const [videoFailed, setVideoFailed] = useState(false);
 

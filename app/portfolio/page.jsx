@@ -11,7 +11,7 @@ export const metadata = {
 export default function PortfolioPage() {
   return (
     <main>
-      <header className="page-header">
+      <header className="page-header page-header--showcase">
         <span className="eyebrow eyebrow--gold">Selected Work</span>
         <h1 className="page-header__title">Portfolio</h1>
         <p className="page-header__intro">
