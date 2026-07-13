@@ -34,7 +34,9 @@ export default function SiteChrome({ children }) {
   return (
     <>
       <nav className="nav">
-        <Link href="/" className="nav__wordmark" onClick={() => setMenuOpen(false)}>
+        {/* "Home" is the homepage experience at /home; the root `/`
+            is the Orbit Gateway entrance. */}
+        <Link href="/home/" className="nav__wordmark" onClick={() => setMenuOpen(false)}>
           Lorenzo&nbsp;von&nbsp;Barron
         </Link>
         <button
