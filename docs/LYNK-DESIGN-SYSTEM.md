@@ -1,6 +1,12 @@
 # LYNK Design System — Superleggera
 
-**Codename:** Superleggera · **v1** · Flagship implementation: Lorenzo von Barron Photography (showcase site)
+**Codename:** Superleggera · **v1.1 (Scarlet revision)** · Flagship implementation: Lorenzo von Barron Photography (showcase site)
+
+> **v1.1 — Tier 2 Scarlet revision:** Burnt Copper is retired as the visible
+> brand accent. Every former copper role now maps to the Scarlet scale; the
+> identity is Obsidian / Chrome / Scarlet. Sections below are updated in
+> place; the copper token *names* survive in `globals.css` as aliases
+> pointing at Scarlet so no component selector needed to change.
 
 Same house. New armor. This document records the visual language applied in the
 `design/lynk-superleggera-v1` pass — a material/lighting reskin of the existing
@@ -35,23 +41,6 @@ the luxury. Scarlet is ignition, not wallpaper.
 | `--graphite` | `#191919` | Reserved for future tile surfaces |
 | `--elevated-graphite` | `#222222` | Reserved for hover/active surfaces |
 
-### Burnt Copper — craftsmanship, premium detail
-
-| Token | Hex | Use | Contrast on Obsidian |
-|---|---|---|---|
-| `--copper-dark` | `#71381F` | Dividers, decorative fills, non-text accents only | 2.22:1 (non-text use only) |
-| `--copper` | `#A85D35` | Large text (≥18px), borders, decorative accents | 4.16:1 |
-| `--copper-light` | `#C77A4A` | **Default readable copper** — labels, numbers, links, prices | 6.13:1 |
-| `--copper-glow` | `#D89660` | Hover/emphasis — one step brighter, stays warm | 9.85:1 |
-
-**Why the extra step:** the brief's literal "Burnt Copper" (`#A85D35`) falls
-under WCAG AA-normal-text contrast (4.5:1) at the 11–13px sizes this system
-uses for eyebrows and numbers. Rather than accept non-compliant text, `--copper`
-is reserved for large text and non-text accents (dividers, ticks, borders),
-and `--copper-light` carries every small readable copper label. `--copper-glow`
-gives hover states a bright-but-still-warm step instead of jumping to cool
-Chrome, which would read as a different material entirely.
-
 ### Chrome — engineering, structure, primary typography
 
 | Token | Hex | Use | Contrast on Obsidian |
@@ -61,17 +50,32 @@ Chrome, which would read as a different material entirely.
 | `--chrome-light` | `#E7EAEC` | Primary text | 16.87:1 |
 | `--chrome-highlight` | `#F5F7F8` | Rare high-key highlight | 18.97:1 |
 
-### Scarlet — ignition, never wallpaper
+### Scarlet — the primary accent (v1.1)
 
-| Token | Hex | Use |
-|---|---|---|
-| `--scarlet-dark` | `#8E1118` | Reserved |
-| `--scarlet` | `#D71920` | The two live uses today: Emily's concierge dot, the hero scroll-cue's ignition seed |
-| `--scarlet-bright` | `#F02A30` | Reserved for a future primary-conversion CTA (none exists on the showcase site today — see LYNK note below) |
+| Token | Hex | Use | Contrast on Obsidian |
+|---|---|---|---|
+| `--scarlet-dark` | `#8E1118` | Dividers, decorative fills, non-text accents only | 2.18:1 (non-text use only) |
+| `--scarlet` | `#D71920` | Large text (≥18px), lighting sweeps, borders, decorative accents | 3.93:1 |
+| `--scarlet-soft` | `#E04A50` | **Default readable scarlet** — labels, numbers, links, prices | 5.11:1 |
+| `--scarlet-bright` | `#F02A30` | Hover/emphasis, Emily's status dot, ignition seeds | 4.93:1 |
 
-**Ratio in practice:** roughly 70% Obsidian/Carbon, 15% Chrome, 10% Copper,
-5% Scarlet or less. Scarlet appears in exactly two places on the current
-showcase site — deliberately rare.
+**Size-based policy (unchanged in spirit from the copper era):** Scarlet
+Core (`#D71920`) reads under WCAG AA-normal (4.5:1) at the 11–13px sizes
+this system uses for eyebrows and numbers, so it is reserved for large
+text and non-text accents. `--scarlet-soft` carries every small readable
+scarlet label; `--scarlet-bright` is the hover/emphasis/status step.
+
+### Retired — Burnt Copper
+
+The v1 copper scale (`#71381F` / `#A85D35` / `#C77A4A` / `#D89660`) is no
+longer rendered anywhere. The token *names* remain in `globals.css` as
+aliases into the Scarlet scale (`--copper-light: var(--scarlet-soft)`,
+etc.) so no component selector had to change. Do not point them back at
+warm hues.
+
+**Ratio in practice:** roughly 75% Obsidian/Carbon, 18% Chrome/neutral,
+7% Scarlet or less. Authoritative and editorial, never loud or sporty —
+no full-red panels, no permanent glows, no gradient clouds.
 
 ### Cool neutral text, not warm cream
 
@@ -98,14 +102,14 @@ fully-migrated mapping (not a half-finished one):
 --charcoal:    var(--carbon)
 --white:       var(--chrome-light)
 --muted:       var(--chrome-mid)
---gold:        var(--copper-light)
---gold-bright: var(--copper-glow)
---burgundy:    var(--copper-dark)
+--gold:        var(--copper-light)   /* → --scarlet-soft via alias chain */
+--gold-bright: var(--copper-glow)    /* → --scarlet-bright */
+--burgundy:    var(--copper-dark)    /* → --scarlet-dark */
 --line:        rgba(231, 234, 236, 0.12)   /* was warm-white based */
 --line-soft:   rgba(231, 234, 236, 0.07)
 ```
 
-If a future pass wants to fully rename `--gold` → `--copper-light` etc. at
+If a future pass wants to fully rename `--gold` → `--scarlet-soft` etc. at
 the call sites, this table is the reference; there is no rush, since the
 remap is already clean.
 
@@ -139,7 +143,7 @@ kicker on the site:
   color: var(--chrome-mid);
   font-variant-numeric: tabular-nums;
 }
-.eyebrow--gold { color: var(--gold); }  /* copper-light — premium/accent labels */
+.eyebrow--gold { color: var(--gold); }  /* scarlet-soft — premium/accent labels */
 ```
 
 Think: Leica lens engravings, Apple packaging, a Porsche dashboard. Not a
@@ -155,25 +159,25 @@ top to bottom. Three levels, mapped onto the showcase site's six routes
 and shared chrome:
 
 ### Level 3 — Showcase
-Directional light, copper edge illumination, exhibit-tile framing, the rare
-scarlet ignition detail.
+Directional light, restrained scarlet edge illumination, exhibit-tile
+framing — controlled red reflection on black metal, never neon.
 
-- **Hero** — a one-shot chrome→copper diagonal light sweep on load (`.hero::before`,
+- **Hero** — a one-shot chrome→scarlet diagonal light sweep on load (`.hero::before`,
   `@keyframes lvb-sweep`, 2.4s, plays once, `var(--ease-superleggera)`), and a
-  small scarlet seed at the top of the scroll-cue line, settling into copper.
+  bright scarlet seed at the top of the scroll-cue line, settling into core scarlet.
 - **Selected Work** (home page's Featured Work reel) — hovering a frame gives
-  a restrained 1.5% scale and a 1px copper edge + deepened shadow. Never a
+  a restrained 1.5% scale and a 1px scarlet edge + deepened shadow. Never a
   continuous glow.
-- **Emily** (concierge, present on every route) — the one persistent scarlet
-  detail on the site: the 6px dot on the trigger pill.
+- **Emily** (concierge, present on every route) — obsidian pill, scarlet
+  hairline border, scarlet label, bright-scarlet status dot. Never solid red.
 - **Portfolio introduction** — the `/portfolio` page header carries a
   `page-header--showcase` modifier class (the one small, documented
   structural addition in this pass — a single className, no DOM change)
-  giving its title a whisper of copper edge-light, distinguishing it from
+  giving its title a whisper of scarlet edge-light, distinguishing it from
   the calmer discipline list below.
 
 ### Level 2 — Premium
-Subtle copper, hairline chrome, gentle lighting, no continuous motion.
+Subtle scarlet accents, hairline chrome, gentle lighting, no continuous motion.
 
 - Portfolio's discipline blocks (hairline chrome edge appears on hover of
   the hero image — no scale, unlike Level 3)
@@ -256,7 +260,7 @@ exists. The component's video props already match this spec.
   using the actual background it appears on (Obsidian, Carbon, or
   Graphite) and its actual in-app font size — see the Palette contrast
   table above.
-- `--chrome-dark` and `--copper`/`--copper-dark` are explicitly restricted
+- `--chrome-dark` and `--scarlet`/`--scarlet-dark` are explicitly restricted
   to large text or non-text uses (borders, dividers, icons) since they
   fall under 4.5:1 at small sizes.
 - All warm-toned `rgba()` literals that weren't previously routed through
@@ -284,7 +288,7 @@ export config, and existing accessibility semantics.
 
 `/lynk` and `/lynk/[category]` were left cosmetically as-is this pass by
 explicit decision, even though they share this same token layer and will
-inherit the Obsidian/Copper/Chrome recoloring automatically through
+inherit the Obsidian/Chrome/Scarlet recoloring automatically through
 `app/globals.css`. No LYNK-specific selector (`.lynk-*`) or the hardcoded
 `rgba()` literals inside them were touched. A dedicated LYNK reskin pass —
 including its own Level 3 "Showcase" treatment per the brief — is a
