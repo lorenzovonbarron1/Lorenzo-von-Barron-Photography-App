@@ -1,53 +1,13 @@
-import Link from "next/link";
-import HeroReel from "@/components/HeroReel";
-import SelectedWorkReel from "@/components/SelectedWorkReel";
-import EditorialImage from "@/components/EditorialImage";
-import Footer from "@/components/Footer";
+import OrbitGateway from "@/components/OrbitGateway";
 
-export default function HomePage() {
-  return (
-    <main>
-      <HeroReel />
+export const metadata = {
+  title: "Lorenzo von Barron Photography",
+  description:
+    "Choose your experience — headshots, fitness, automotive, portraits, events, product, and Working Class Stories. Dark luxury editorial photography. Bookings via LYNK.",
+};
 
-      <SelectedWorkReel />
-
-      <section className="creed reveal">
-        <span className="eyebrow">The Creed</span>
-        <h2 className="creed__lead">
-          We do not take pictures. <em>We build presence.</em>
-        </h2>
-        <div className="creed__body">
-          <p>
-            Lorenzo von Barron Photography exists to make people look important, brands look
-            expensive, and moments look legendary.
-          </p>
-          <p className="is-bright">This is not photography for people trying to look average.</p>
-          <p>
-            This is photography for athletes, creators, entrepreneurs, fighters, restaurants,
-            families, students, and brands building something worth being seen.
-          </p>
-        </div>
-        <p className="creed__close">Look good. Move loud. Let them watch.</p>
-        <span className="creed__rule" aria-hidden="true" />
-      </section>
-
-      <section className="plate reveal-fade">
-        <EditorialImage
-          src="/images/home/editorial-plate.jpg"
-          label="Full-Bleed — Editorial Plate"
-          alt="Full-bleed editorial photograph by Lorenzo von Barron"
-        />
-      </section>
-
-      <section className="portfolio-cta">
-        <span className="eyebrow">Portfolio</span>
-        <Link href="/portfolio/" className="quiet-cta">
-          Enter the Portfolio
-          <span className="quiet-cta__arrow">→</span>
-        </Link>
-      </section>
-
-      <Footer home />
-    </main>
-  );
+// `/` is the LYNK Orbit Gateway — the site's entrance.
+// The full homepage experience lives at /home.
+export default function GatewayPage() {
+  return <OrbitGateway />;
 }

@@ -6,7 +6,7 @@ export default function Footer({ home = false, width = "wide", right = "Bookings
       {home ? (
         <span className="site-footer__left">Lorenzo von Barron</span>
       ) : (
-        <Link href="/" className="site-footer__left">
+        <Link href="/home/" className="site-footer__left">
           ← Home
         </Link>
       )}
