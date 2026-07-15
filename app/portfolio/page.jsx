@@ -32,7 +32,8 @@ export default function PortfolioPage() {
             className="discipline__hero reveal-fade"
             src={d.heroImage}
             label={d.heroLabel}
-            alt={d.alt}
+            alt={d.heroAlt || d.alt}
+            objectPosition={d.heroObjectPosition}
           />
 
           <div className="discipline__grid">
