@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 // Every photograph on the site renders through this frame: consistent
 // dark veil over real images, and a labeled editorial placeholder when
 // the file isn't in /public yet — the layout never breaks.
-export default function EditorialImage({ src, alt = "", label = "", className = "", loading = "lazy" }) {
+export default function EditorialImage({ src, alt = "", label = "", className = "", loading = "lazy", objectPosition }) {
   const [failed, setFailed] = useState(false);
   const imgRef = useRef(null);
 
@@ -22,7 +22,14 @@ export default function EditorialImage({ src, alt = "", label = "", className = 
   return (
     <figure className={`ed-image ${empty ? "ed-image--empty" : ""} ${className}`.trim()}>
       {!empty && (
-        <img ref={imgRef} src={src} alt={alt || label} loading={loading} onError={() => setFailed(true)} />
+        <img
+          ref={imgRef}
+          src={src}
+          alt={alt || label}
+          loading={loading}
+          onError={() => setFailed(true)}
+          style={objectPosition ? { objectPosition } : undefined}
+        />
       )}
       {empty && <span className="ed-image__label">{label || alt}</span>}
       <span className="ed-image__veil" aria-hidden="true" />

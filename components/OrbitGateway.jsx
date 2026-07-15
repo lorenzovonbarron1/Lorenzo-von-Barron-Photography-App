@@ -186,6 +186,7 @@ export default function OrbitGateway() {
                 src={item.image}
                 label={item.title}
                 alt={item.alt}
+                objectPosition={item.objectPosition}
               />
               <span className="orbit-card__meta">
                 <span className="orbit-card__num" aria-hidden="true">
