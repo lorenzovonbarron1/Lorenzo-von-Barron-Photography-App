@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { AGENT } from "@/lib/agent.config";
 import { recentLeads } from "@/lib/integrations/crm";
+import { integrationStatus } from "@/lib/integrations/config";
 import { buildAutoBrief } from "@/lib/autobrief";
+import { attributionChips } from "@/lib/attribution";
 import type { BuyerLead } from "@/lib/leads";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +20,12 @@ export default function AgentBriefPage() {
     timeline: "now", listingId: "616-krista", areaAnchor: "downtown Phoenix office",
     bedrooms: "3 bed + office", priceBand: "$550k–$650k", financing: "pre-approved",
     note: "Relocating for work in August, want single-level.", consent: true,
-    source: "sign-616krista", agentId: AGENT.id, createdAt: new Date().toISOString(),
+    source: "sign-616krista",
+    attribution: {
+      source: "sign-616krista", utmSource: "qr", utmMedium: "yard-sign",
+      utmCampaign: "krista-launch", listingId: "616-krista",
+    },
+    agentId: AGENT.id, createdAt: new Date().toISOString(),
   };
   const briefs = captured.length ? captured.map((c) => c.brief) : [buildAutoBrief(sample)];
 
@@ -51,9 +58,28 @@ export default function AgentBriefPage() {
                 <strong>Suggested reply:</strong> {b.recommendedReply}
               </div>
               {b.lenderReferral && <p className="notice notice--warn">Lender referral flow applies — {AGENT.lender.disclosure}</p>}
-              <p className="path-card__desc" style={{ color: "var(--stone-500)" }}>Source: {b.source} · Consent: {new Date(b.consentAt).toLocaleString()}</p>
+              <div className="chips" aria-label="Campaign attribution">
+                {(b.attribution ? attributionChips(b.attribution) : [`Source: ${b.source}`]).map((c) => (
+                  <span key={c} className="chip" style={{ fontSize: "0.8rem", minHeight: 36, padding: "8px 12px" }}>{c}</span>
+                ))}
+              </div>
+              <p className="path-card__desc" style={{ color: "var(--stone-500)" }}>Consent: {new Date(b.consentAt).toLocaleString()}</p>
             </article>
           ))}
+        </div>
+
+        {/* Integration status — what's live vs mocked right now */}
+        <div className="card" style={{ marginTop: 8 }}>
+          <p className="eyebrow">Delivery channels</p>
+          <ul className="stack gap-s" style={{ listStyle: "none", padding: 0, marginTop: 12 }}>
+            {integrationStatus().map((s) => (
+              <li key={s.name} className="body" style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+                <span style={{ color: s.live ? "#7ee0a0" : "var(--lynk-bright)" }}>{s.live ? "● live" : "○ mocked"}</span>
+                <span>{s.name}</span>
+                {!s.live && <span style={{ color: "var(--stone-500)", fontSize: "0.8rem" }}>needs {s.requires}</span>}
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
     </main>

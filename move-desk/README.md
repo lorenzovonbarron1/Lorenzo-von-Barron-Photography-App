@@ -60,7 +60,18 @@ the layout never breaks and no false claim is made. To go live: drop files in
 - Nothing is `approved` by default; no MLS facts are invented; demo listings
   are flagged `isDemo`.
 
+## Campaign attribution (QR / social / flyer)
+
+Any landing URL may carry `?src=`, `utm_source`, `utm_medium`, `utm_campaign`,
+and `listing`. First touch is captured client-side (sessionStorage) and
+survives the whole journey; the full attribution lands on every lead and
+Auto-Brief and is displayed in the Agent Console. Example QR target:
+`/step-inside/616-krista?src=sign-616krista&utm_medium=yard-sign`.
+
 ## Mocked vs. live
+
+Full per-variable contract: `docs/INTEGRATIONS.md`. Agent alert overrides:
+`AGENT_NOTIFY_EMAIL` / `AGENT_NOTIFY_PHONE`.
 
 | Capability | Now (mock) | Live when… |
 |---|---|---|

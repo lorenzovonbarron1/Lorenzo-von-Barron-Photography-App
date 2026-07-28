@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AGENT } from "@/lib/agent.config";
 import { getListing, LISTINGS } from "@/lib/listings";
-import AssetImage from "@/components/AssetImage";
 import StepInside from "@/components/StepInside";
+import SaveToDeskButton from "@/components/SaveToDeskButton";
 import ComplianceFooter from "@/components/ComplianceFooter";
 
 export function generateStaticParams() {
@@ -40,6 +40,11 @@ export default async function StepInsidePage({ params }: { params: Promise<{ id:
       {/* Cinematic scroll sequence */}
       <section className="wrap section" style={{ paddingTop: 12 }}>
         <StepInside listing={listing} />
+        <div className="si-actions">
+          <a className="btn btn--primary" href={`sms:${AGENT.phone}`}>Text {AGENT.name}</a>
+          <Link className="btn btn--ghost" href={`/buy?listing=${listing.id}`}>Request a private showing</Link>
+          <SaveToDeskButton listingId={listing.id} />
+        </div>
       </section>
 
       {/* The property story */}
@@ -86,6 +91,7 @@ export default async function StepInsidePage({ params }: { params: Promise<{ id:
           <div className="stack gap-s" style={{ flexDirection: "row", flexWrap: "wrap" }}>
             <Link className="btn btn--primary" href={`/buy?listing=${listing.id}`}>Request a private showing</Link>
             <a className="btn btn--ghost" href={`sms:${AGENT.phone}`}>Text {AGENT.name}</a>
+            <SaveToDeskButton listingId={listing.id} />
           </div>
         </div>
       </section>

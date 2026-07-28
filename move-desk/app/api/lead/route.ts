@@ -5,6 +5,8 @@ import { AGENT } from "@/lib/agent.config";
 import { sendEmail } from "@/lib/integrations/email";
 import { sendSms } from "@/lib/integrations/sms";
 import { persistLead } from "@/lib/integrations/crm";
+import { integrationConfig } from "@/lib/integrations/config";
+import { attributionChips } from "@/lib/attribution";
 
 export const runtime = "nodejs";
 
@@ -28,25 +30,32 @@ export async function POST(req: Request) {
   lead.id ||= crypto.randomUUID();
   lead.agentId ||= AGENT.id;
   lead.createdAt ||= new Date().toISOString();
+  // A listing seen via the campaign URL enriches a buyer lead that
+  // didn't carry one explicitly.
+  if (lead.type === "buyer" && !lead.listingId && lead.attribution?.listingId) {
+    lead.listingId = lead.attribution.listingId;
+  }
 
   const brief = buildAutoBrief(lead);
+  const { notify } = integrationConfig();
 
   // Persist first (source of truth) so a lead is never lost even if
   // notifications fail.
   const delivery = [] as { channel: string; live: boolean; ok: boolean; detail?: string }[];
   delivery.push(await persistLead(lead, brief));
 
-  // Notify the agent.
+  // Notify the agent (env overrides beat agent config — see
+  // docs/INTEGRATIONS.md).
   delivery.push(
     await sendEmail({
-      to: AGENT.email,
+      to: notify.email,
       replyTo: lead.email,
       subject: `New ${lead.type} lead — ${lead.name} (${brief.timeline})`,
       body: agentEmailBody(brief),
     })
   );
-  if (AGENT.phone) {
-    delivery.push(await sendSms({ to: AGENT.phone, body: brief.headline }));
+  if (notify.phone) {
+    delivery.push(await sendSms({ to: notify.phone, body: brief.headline }));
   }
 
   // Confirm to the lead (SMS only if they gave a phone + consented).
@@ -74,7 +83,7 @@ function agentEmailBody(brief: ReturnType<typeof buildAutoBrief>): string {
     `Contact: ${c.name} · prefers ${c.method}${c.bestTime ? ` (${c.bestTime})` : ""}`,
     c.phone ? `Phone: ${c.phone}` : "",
     c.email ? `Email: ${c.email}` : "",
-    `Source: ${brief.source}`,
+    attributionChips(brief.attribution).join(" · ") || `Source: ${brief.source}`,
     "",
     ...brief.details.map((d) => `• ${d}`),
     brief.note ? `\nNote: ${brief.note}` : "",

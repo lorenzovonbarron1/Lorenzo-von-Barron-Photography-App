@@ -29,7 +29,8 @@ export interface BaseLead {
   timeline: Timeline;
   note?: string;         // free-text — highest-value field
   consent: boolean;      // TCPA — must be true
-  source: string;        // QR / UTM campaign source
+  source: string;        // QR / UTM campaign source (kept for compat)
+  attribution?: import("@/lib/attribution").Attribution; // full campaign context
   agentId: string;
   createdAt: string;     // ISO
 }

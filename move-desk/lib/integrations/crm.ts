@@ -1,6 +1,7 @@
 import type { DeliveryResult } from "./index";
 import type { Lead } from "@/lib/leads";
 import type { AutoBrief } from "@/lib/autobrief";
+import { integrationConfig } from "./config";
 
 // Source-of-truth persistence. Live path = a generic CRM webhook
 // (Follow Up Boss / Airtable / Zapier catch-hook) when CRM_WEBHOOK_URL
@@ -14,10 +15,11 @@ export function recentLeads(limit = 25): { lead: Lead; brief: AutoBrief }[] {
 export async function persistLead(lead: Lead, brief: AutoBrief): Promise<DeliveryResult> {
   memory.push({ lead, brief });
 
-  const url = process.env.CRM_WEBHOOK_URL;
-  if (!url) {
+  const { crm } = integrationConfig();
+  if (!crm.enabled) {
     return { channel: "crm", live: false, ok: true, detail: "mocked (in-memory; set CRM_WEBHOOK_URL)" };
   }
+  const url = crm.webhookUrl!;
   try {
     const res = await fetch(url, {
       method: "POST",

@@ -1,7 +1,9 @@
 import "./globals.css";
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { AGENT, agentAccentStyle } from "@/lib/agent.config";
 import StickyContact from "@/components/StickyContact";
+import AttributionCapture from "@/components/AttributionCapture";
 
 export const metadata: Metadata = {
   title: `${AGENT.name}'s Move Desk`,
@@ -28,6 +30,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body style={agentAccentStyle()}>
+        {/* First-touch QR/UTM capture — Suspense required around
+            useSearchParams in the app router. */}
+        <Suspense fallback={null}>
+          <AttributionCapture />
+        </Suspense>
         {children}
         <StickyContact />
       </body>

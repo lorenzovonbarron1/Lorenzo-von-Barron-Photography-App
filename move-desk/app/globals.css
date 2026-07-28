@@ -183,21 +183,30 @@ img { max-width: 100%; display: block; }
   backdrop-filter: blur(10px);
 }
 .agent-pill__avatar { width: 40px; height: 40px; border-radius: 999px; object-fit: cover; border: 1px solid var(--agent-accent); }
-.agent-pill__name { font-weight: 600; font-size: 0.95rem; }
+.agent-pill__name { font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .agent-pill__role { color: var(--stone-300); font-size: 0.78rem; }
+.demo-chip {
+  font-size: 9px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 999px; white-space: nowrap;
+  color: var(--lynk-bright); border: 1px solid var(--lynk-deep); background: var(--lynk-glow);
+}
 
 /* ── Sticky mobile contact ──────────────────────────────── */
 .sticky-contact {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
-  display: flex; gap: 10px; padding: 12px var(--gutter);
+  display: flex; gap: 8px; padding: 12px var(--gutter);
   padding-bottom: calc(12px + var(--safe-b));
   background: linear-gradient(180deg, transparent, var(--obsidian) 34%);
 }
-.sticky-contact .btn { min-height: 50px; }
+/* Buttons share the row: no wrapping, no overflow, thumb-height. */
+.sticky-contact .btn {
+  min-height: 50px; width: auto; flex: 1 1 0; padding: 0 14px;
+  font-size: 0.95rem; white-space: nowrap;
+}
 .sticky-contact__call { flex: 0 0 50px; padding: 0; }
 @media (min-width: 900px) {
   .sticky-contact { justify-content: center; background: none; pointer-events: none; }
-  .sticky-contact > * { pointer-events: auto; max-width: 260px; }
+  .sticky-contact > * { pointer-events: auto; flex: 0 1 auto; min-width: 200px; }
   .sticky-contact__call { display: none; }
 }
 
@@ -244,12 +253,105 @@ img { max-width: 100%; display: block; }
 
 /* ── Step Inside scroll cinema ──────────────────────────── */
 .si-frame {
-  position: relative; height: 78dvh; border-radius: var(--radius); overflow: hidden;
+  position: relative; height: 74dvh; border-radius: var(--radius); overflow: hidden;
   border: 1px solid var(--line); background: var(--carbon);
 }
-.si-frame > .asset { position: absolute; inset: 0; border: 0; border-radius: 0; opacity: 0; transition: opacity var(--medium) var(--ease); }
-.si-frame > .asset[data-active="true"] { opacity: 1; }
-.si-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 28px var(--gutter); background: linear-gradient(0deg, rgba(10,9,8,0.9), transparent); }
+
+/* Cinematic plates — premium stand-ins until approved photography.
+   Each room has its own light field; the active plate breathes with
+   a slow scale. Honest by design: every plate carries an "awaiting
+   photography" tag, and no plate pretends to be a photo. */
+.plate {
+  position: absolute; inset: 0; opacity: 0; visibility: hidden;
+  transition: opacity var(--medium) var(--ease), visibility 0s linear var(--medium);
+  display: flex; flex-direction: column; justify-content: flex-end;
+  overflow: hidden;
+}
+.plate[data-active="true"] { opacity: 1; visibility: visible; transition-delay: 0s; }
+
+.plate__field {
+  position: absolute; inset: -6%;
+  background:
+    radial-gradient(120% 90% at var(--px, 70%) 8%, var(--plate-glow, rgba(255,122,60,0.16)), transparent 55%),
+    radial-gradient(140% 110% at 12% 100%, var(--plate-b, #1c1610), transparent 70%),
+    linear-gradient(178deg, var(--plate-a, #131009) 0%, var(--obsidian) 88%);
+}
+.plate[data-active="true"] .plate__field { animation: plate-breathe 14s var(--ease) infinite alternate; }
+@keyframes plate-breathe {
+  from { transform: scale(1) translateY(0); }
+  to   { transform: scale(1.045) translateY(-1.2%); }
+}
+/* Horizon hairline gives each field a sense of architecture. */
+.plate__field::after {
+  content: ""; position: absolute; left: 8%; right: 8%; top: var(--horizon, 62%);
+  height: 1px; background: linear-gradient(90deg, transparent, var(--line), transparent);
+}
+.plate__img { position: absolute; inset: 0; }
+.plate__img img { width: 100%; height: 100%; object-fit: cover; }
+.plate[data-active="true"] .plate__img img { animation: plate-breathe 14s var(--ease) infinite alternate; }
+
+/* Room themes */
+.plate[data-room="arrival"]  { --plate-a: #1a120a; --plate-b: #2a1a0e; --plate-glow: rgba(255,122,60,0.2); --px: 72%; --horizon: 64%; }
+.plate[data-room="entry"]    { --plate-a: #16110c; --plate-b: #241a12; --plate-glow: rgba(255,171,110,0.14); --px: 30%; --horizon: 58%; }
+.plate[data-room="living"]   { --plate-a: #151210; --plate-b: #221c15; --plate-glow: rgba(236,231,221,0.10); --px: 62%; --horizon: 60%; }
+.plate[data-room="kitchen"]  { --plate-a: #121110; --plate-b: #1e1b16; --plate-glow: rgba(236,231,221,0.14); --px: 40%; --horizon: 55%; }
+.plate[data-room="primary"]  { --plate-a: #100f12; --plate-b: #1a1720; --plate-glow: rgba(154,140,255,0.10); --px: 68%; --horizon: 62%; }
+.plate[data-room="backyard"] { --plate-a: #171008; --plate-b: #2b190c; --plate-glow: rgba(255,110,48,0.22); --px: 50%; --horizon: 70%; }
+
+.plate__word {
+  position: absolute; top: 8%; left: 6%; right: 6%;
+  font-family: var(--font-serif); font-weight: 300; line-height: 0.96;
+  font-size: clamp(3rem, 14vw, 7rem); color: rgba(236, 231, 221, 0.14);
+  letter-spacing: -0.01em; pointer-events: none; user-select: none;
+}
+.plate__meta {
+  position: relative; padding: 24px 20px calc(20px + 6px);
+  background: linear-gradient(0deg, rgba(10, 9, 8, 0.92) 30%, transparent);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.plate__title { font-family: var(--font-serif); font-size: 1.7rem; font-weight: 400; color: var(--chrome-light); }
+.plate__caption { color: var(--chrome-mid); font-size: 1rem; line-height: 1.45; max-width: 40ch; }
+.plate__tag {
+  align-self: flex-start; margin-top: 6px;
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line);
+  color: var(--stone-300); background: var(--glass);
+}
+.plate__tag--ai { color: var(--lynk-bright); border-color: var(--lynk-deep); }
+
+/* Progress rail */
+.si-rail {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%); z-index: 3;
+  display: flex; flex-direction: column; gap: 10px; align-items: center;
+}
+.si-rail__dot {
+  width: 6px; height: 6px; border-radius: 999px; background: var(--stone-500);
+  transition: all var(--fast) var(--ease);
+}
+.si-rail__dot[data-active="true"] { background: var(--lynk); height: 18px; }
+.si-counter {
+  position: absolute; top: 14px; left: 16px; z-index: 3;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scroll spacers that drive the sequence */
+.si-spacer { height: 60vh; }
+.si-spacer:first-of-type { height: 20vh; }
+
+/* Static gallery (reduced motion / fallback): stacked, all visible */
+.si-static { display: flex; flex-direction: column; gap: 16px; }
+.si-static .plate {
+  position: relative; opacity: 1; visibility: visible; inset: auto;
+  min-height: 320px; border-radius: var(--radius); border: 1px solid var(--line);
+}
+.si-static .plate__field { animation: none; }
+
+/* CTA band under the cinema */
+.si-actions {
+  display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px;
+}
+.si-actions .btn { flex: 1 1 100%; }
+@media (min-width: 620px) { .si-actions .btn { flex: 0 1 auto; } }
 
 .grid-2 { display: grid; grid-template-columns: 1fr; gap: 16px; }
 @media (min-width: 720px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
@@ -259,8 +361,8 @@ img { max-width: 100%; display: block; }
 .divider { height: 1px; background: var(--line); border: 0; margin-block: clamp(40px, 8vw, 72px); }
 
 /* ── Reduced motion ─────────────────────────────────────── */
+/* StepInside also JS-detects reduced motion and renders the static
+   gallery; these rules are the belt-and-braces CSS layer. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
-  .si-frame > .asset { opacity: 1; position: relative; }
-  .si-frame { height: auto; }
 }

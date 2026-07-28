@@ -1,14 +1,12 @@
 import Link from "next/link";
 import { AGENT } from "@/lib/agent.config";
 import { getMoveDesk } from "@/lib/mydesk";
-import { getListing } from "@/lib/listings";
-import AssetImage from "@/components/AssetImage";
+import SavedHomeCard from "@/components/SavedHomeCard";
 import ComplianceFooter from "@/components/ComplianceFooter";
 
 export default async function MyDeskPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
   const sp = await searchParams;
   const desk = getMoveDesk(sp.token);
-  const listing = getListing(desk.savedListingId);
 
   return (
     <main className="page">
@@ -20,17 +18,9 @@ export default async function MyDeskPage({ searchParams }: { searchParams: Promi
         <h1 className="headline">Welcome back, {desk.firstName}.</h1>
 
         <div className="grid-2" style={{ marginTop: 8 }}>
-          {/* Saved home */}
-          <div className="card stack gap-s">
-            <p className="eyebrow">Your saved home</p>
-            {listing && (
-              <>
-                <Link href={`/step-inside/${listing.id}`}><AssetImage asset={listing.hero} /></Link>
-                <h3 className="path-card__title">{listing.headline}</h3>
-                <p className="path-card__desc">{listing.price} · {listing.beds} bd · {listing.baths} ba · {listing.address}</p>
-              </>
-            )}
-          </div>
+          {/* Saved home — reflects a real "Save to My Move Desk" tap
+              on this device, falling back to the demo state. */}
+          <SavedHomeCard fallbackListingId={desk.savedListingId} />
 
           {/* Next step from the agent */}
           <div className="card stack gap-s">

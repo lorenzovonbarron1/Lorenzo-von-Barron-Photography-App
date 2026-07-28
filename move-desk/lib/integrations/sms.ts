@@ -1,22 +1,22 @@
 import type { DeliveryResult, SmsMessage } from "./index";
+import { integrationConfig } from "./config";
 
-// SMS delivery. Live path = Twilio when creds are set. Consent is
-// enforced upstream (in the API route) — this layer only transports.
+// SMS delivery. Live path = Twilio when all three TWILIO_* vars are
+// set. Consent is enforced upstream (in the API route) — this layer
+// only transports.
 export async function sendSms(msg: SmsMessage): Promise<DeliveryResult> {
-  const sid = process.env.TWILIO_ACCOUNT_SID;
-  const token = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_FROM;
+  const { sms } = integrationConfig();
 
-  if (!sid || !token || !from) {
+  if (!sms.enabled) {
     console.info("[sms:mock]", { to: msg.to });
-    return { channel: "sms", live: false, ok: true, detail: "mocked (no TWILIO creds)" };
+    return { channel: "sms", live: false, ok: true, detail: "mocked — set TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN + TWILIO_FROM" };
   }
   try {
-    const body = new URLSearchParams({ To: msg.to, From: from, Body: msg.body });
-    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+    const body = new URLSearchParams({ To: msg.to, From: sms.from!, Body: msg.body });
+    const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sms.accountSid}/Messages.json`, {
       method: "POST",
       headers: {
-        Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString("base64")}`,
+        Authorization: `Basic ${Buffer.from(`${sms.accountSid}:${sms.authToken}`).toString("base64")}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body,

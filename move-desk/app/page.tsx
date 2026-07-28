@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AGENT } from "@/lib/agent.config";
 import { FEATURED_LISTING } from "@/lib/listings";
 import AssetImage from "@/components/AssetImage";
+import AgentPill from "@/components/AgentPill";
 import ComplianceFooter from "@/components/ComplianceFooter";
 
 // Home / the agent's Move Desk. One warm hero, three clear paths, a
@@ -17,13 +18,8 @@ export default function HomePage() {
           <div className="stack gap-m">
             <h1 className="display">{AGENT.heroMessage}</h1>
             <p className="lede">{AGENT.intro}</p>
-            <div className="agent-pill" style={{ alignSelf: "flex-start", marginTop: 4 }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="agent-pill__avatar" src={AGENT.portraits.avatar} alt={AGENT.name} />
-              <div>
-                <div className="agent-pill__name">{AGENT.name}</div>
-                <div className="agent-pill__role">{AGENT.role} · {AGENT.territory}</div>
-              </div>
+            <div style={{ alignSelf: "flex-start", marginTop: 4 }}>
+              <AgentPill detail={`${AGENT.role} · ${AGENT.territory}`} />
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AGENT } from "@/lib/agent.config";
 import { submitLead, makeId, type SellerLead, type ContactMethod, type Timeline, type BestTime, type SellerPriority } from "@/lib/leads";
+import { getAttribution } from "@/lib/attribution";
 import ConfirmationScreen from "@/components/ConfirmationScreen";
 
 // Seller strategy intake — a plan and a conversation, not an instant
@@ -50,6 +51,7 @@ export default function SellerForm({ source }: { source: string }) {
     if (!validate()) return;
     setState("sending");
     setServerError("");
+    const attribution = getAttribution(source);
     const lead: SellerLead = {
       id: makeId(),
       type: "seller",
@@ -70,7 +72,8 @@ export default function SellerForm({ source }: { source: string }) {
       buyingNext: (buyingNext || undefined) as SellerLead["buyingNext"],
       note: note.trim() || undefined,
       consent,
-      source,
+      source: attribution.source,
+      attribution,
       agentId: AGENT.id,
       createdAt: new Date().toISOString(),
     };

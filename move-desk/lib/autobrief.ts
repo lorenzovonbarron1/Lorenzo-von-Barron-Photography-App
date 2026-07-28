@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import type { Lead, BuyerLead, SellerLead, Timeline } from "@/lib/leads";
+import type { Attribution } from "@/lib/attribution";
 
 export type NextAction =
   | "call-now-offer-tour"
@@ -23,6 +24,7 @@ export interface AutoBrief {
   type: "buyer" | "seller";
   contact: { name: string; method: string; phone?: string; email?: string; bestTime?: string };
   source: string;
+  attribution?: Attribution;   // full QR/UTM campaign context
   consentAt: string;
   timeline: Timeline;
   details: string[];        // skimmable bullets
@@ -56,7 +58,8 @@ export function buildAutoBrief(lead: Lead): AutoBrief {
       email: lead.email,
       bestTime: lead.bestTime,
     },
-    source: lead.source,
+    source: lead.attribution?.source || lead.source,
+    attribution: lead.attribution,
     consentAt: lead.createdAt,
     timeline: lead.timeline,
     note: lead.note,

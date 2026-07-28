@@ -1,22 +1,34 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import AssetImage from "@/components/AssetImage";
-import type { Listing } from "@/lib/listings";
+import type { Listing, StepInsideFrame } from "@/lib/listings";
 
-// Scroll-driven cinematic sequence: a pinned frame cross-fades through
-// the approved room order as the reader scrolls step markers. Under
-// prefers-reduced-motion (and no-JS), CSS collapses it into a static,
-// fully-readable vertical gallery — no motion required to understand
-// the home. AI motion, when present, is tagged "Cinematic Listing
-// Preview" by AssetImage; nothing here claims a verified tour.
+// The flagship: a pinned cinematic frame that moves through the
+// approved room order as the reader scrolls. Until real photography
+// arrives, each room renders as a designed "light field" plate —
+// distinct per room, clearly tagged as awaiting photography, never
+// pretending to be a photo. Real assets drop in via lib/listings.ts
+// with zero component changes.
+//
+// prefers-reduced-motion (JS-detected, like the CSS belt) renders a
+// static stacked gallery with every room fully visible — the story
+// requires no motion to be understood. The server also pre-activates
+// frame 0 so the first paint is never an empty frame.
 export default function StepInside({ listing }: { listing: Listing }) {
   const [active, setActive] = useState(0);
+  const [staticMode, setStaticMode] = useState(false);
   const markers = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) return;
+    const apply = () => setStaticMode(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  useEffect(() => {
+    if (staticMode) return;
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -30,47 +42,92 @@ export default function StepInside({ listing }: { listing: Listing }) {
     );
     markers.current.forEach((m) => m && io.observe(m));
     return () => io.disconnect();
-  }, []);
+  }, [staticMode]);
+
+  if (staticMode) {
+    return (
+      <div className="si-static" aria-label="Room-by-room story">
+        {listing.frames.map((f, i) => (
+          <Plate key={f.key} frame={f} index={i} total={listing.frames.length} active />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div>
-      {/* Pinned cinematic frame */}
       <div style={{ position: "sticky", top: 12, zIndex: 1 }}>
-        <div className="si-frame">
+        <div className="si-frame" role="img" aria-label={`${listing.headline} — ${listing.frames[active]?.title}`}>
           {listing.frames.map((f, i) => (
-            <AssetImage key={f.key} asset={f.asset} className="" priority={i === 0} />
+            <Plate key={f.key} frame={f} index={i} total={listing.frames.length} active={i === active} />
           ))}
-          {/* Active overlay caption */}
-          <div className="si-caption">
-            <p className="eyebrow eyebrow--lynk">{listing.frames[active]?.title}</p>
-            {listing.frames[active]?.asset.caption && (
-              <p className="lede" style={{ maxWidth: "40ch" }}>{listing.frames[active].asset.caption}</p>
-            )}
+          <span className="eyebrow si-counter" aria-hidden="true">
+            {String(active + 1).padStart(2, "0")} / {String(listing.frames.length).padStart(2, "0")}
+          </span>
+          <div className="si-rail" aria-hidden="true">
+            {listing.frames.map((f, i) => (
+              <span key={f.key} className="si-rail__dot" data-active={i === active} />
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Set active-frame data attribute for CSS opacity control */}
-      <SetActive frames={listing.frames.length} active={active} />
-
-      {/* Scroll markers drive the active frame (invisible spacers on desktop, real cards when reduced-motion collapses) */}
+      {/* Invisible scroll spacers drive the active frame. */}
       <div aria-hidden="true">
         {listing.frames.map((f, i) => (
-          <div key={f.key} ref={(el) => { markers.current[i] = el; }} data-index={i} style={{ height: "62vh" }} />
+          <div
+            key={f.key}
+            ref={(el) => { markers.current[i] = el; }}
+            data-index={i}
+            className="si-spacer"
+          />
         ))}
       </div>
     </div>
   );
 }
 
-// Toggles data-active on the frame's asset children so CSS controls
-// the cross-fade without re-rendering images.
-function SetActive({ active }: { frames: number; active: number }) {
-  useEffect(() => {
-    const frame = document.querySelector(".si-frame");
-    if (!frame) return;
-    const kids = frame.querySelectorAll<HTMLElement>(".asset");
-    kids.forEach((k, i) => k.setAttribute("data-active", String(i === active)));
-  }, [active]);
-  return null;
+function Plate({
+  frame,
+  index,
+  total,
+  active,
+}: {
+  frame: StepInsideFrame;
+  index: number;
+  total: number;
+  active: boolean;
+}) {
+  const a = frame.asset;
+  const isPlaceholder = !a.src || a.source === "placeholder";
+  const tag =
+    a.source === "ai-assisted"
+      ? "Cinematic Listing Preview"
+      : isPlaceholder
+      ? "Awaiting approved photography"
+      : a.approval !== "approved"
+      ? `Photography — ${a.approval}`
+      : null;
+
+  return (
+    <div className="plate" data-room={frame.key} data-active={active}>
+      {isPlaceholder ? (
+        <>
+          <div className="plate__field" aria-hidden="true" />
+          <span className="plate__word" aria-hidden="true">{frame.title}</span>
+        </>
+      ) : (
+        <div className="plate__img">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={a.src} alt={a.label} loading={index === 0 ? "eager" : "lazy"} />
+        </div>
+      )}
+      <div className="plate__meta">
+        <span className="eyebrow eyebrow--lynk">{String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}</span>
+        <span className="plate__title">{frame.title}</span>
+        {a.caption && <span className="plate__caption">{a.caption}</span>}
+        {tag && <span className={`plate__tag ${a.source === "ai-assisted" ? "plate__tag--ai" : ""}`.trim()}>{tag}</span>}
+      </div>
+    </div>
+  );
 }

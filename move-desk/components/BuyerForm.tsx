@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { AGENT } from "@/lib/agent.config";
 import { submitLead, makeId, type BuyerLead, type ContactMethod, type Timeline, type FinancingStage, type BestTime } from "@/lib/leads";
+import { getAttribution } from "@/lib/attribution";
 import ConfirmationScreen from "@/components/ConfirmationScreen";
 
 // Buyer intake. Book/Text is offered first (above); this optional
@@ -44,6 +45,10 @@ export default function BuyerForm({ listingId, source }: { listingId?: string; s
     if (!validate()) return;
     setState("sending");
     setServerError("");
+    // First-touch campaign attribution (?src / utm_*) captured at
+    // landing survives the whole journey and rides on the lead.
+    const attribution = getAttribution(source);
+    if (listingId && !attribution.listingId) attribution.listingId = listingId;
     const lead: BuyerLead = {
       id: makeId(),
       type: "buyer",
@@ -60,7 +65,8 @@ export default function BuyerForm({ listingId, source }: { listingId?: string; s
       financing: (financing || undefined) as FinancingStage | undefined,
       note: note.trim() || undefined,
       consent,
-      source,
+      source: attribution.source,
+      attribution,
       agentId: AGENT.id,
       createdAt: new Date().toISOString(),
     };

@@ -33,6 +33,15 @@ export interface LenderPartner {
 export interface AgentProfile {
   id: string;
   name: string;
+  /**
+   * DEMO RULE: while true, the interface must visibly present this
+   * agent as a product demo persona — not a live licensed agent
+   * available to represent buyers or sellers. Set to false ONLY when
+   * real agent/brokerage/license details replace the placeholders.
+   */
+  isDemo: boolean;
+  /** Short badge text rendered next to the identity while isDemo. */
+  demoLabel: string;
   role: string;
   heroMessage: string;
   intro: string;
@@ -65,6 +74,8 @@ export interface AgentProfile {
 export const EMILY: AgentProfile = {
   id: "emily",
   name: "Emily",
+  isDemo: true,
+  demoLabel: "Demo persona — not a licensed agent",
   role: "Your Move Desk guide",
   heroMessage: "Let's make your next move feel clear.",
   intro:
