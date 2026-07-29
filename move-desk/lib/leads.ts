@@ -64,10 +64,12 @@ export function makeId(): string {
   return `lead-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-/** Client-side POST to the lead engine. Never throws — returns a result. */
+/** Client-side POST to the lead engine. Never throws — returns a
+ * result. The server response is intentionally minimal ({ ok, id });
+ * briefs and delivery status are internal to the Agent Console. */
 export async function submitLead(
   lead: Lead
-): Promise<{ ok: boolean; brief?: unknown; error?: string }> {
+): Promise<{ ok: boolean; id?: string; error?: string }> {
   try {
     const res = await fetch("/api/lead", {
       method: "POST",
@@ -76,7 +78,7 @@ export async function submitLead(
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return { ok: false, error: data?.error || `HTTP ${res.status}` };
-    return { ok: true, brief: data?.brief };
+    return { ok: true, id: data?.id };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "network error" };
   }

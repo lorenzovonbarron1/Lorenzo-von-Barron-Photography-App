@@ -29,9 +29,17 @@ export function integrationConfig(): IntegrationConfig {
     authToken: process.env.TWILIO_AUTH_TOKEN,
     from: process.env.TWILIO_FROM,
   };
+  // SMS requires an EXPLICIT opt-in on top of credentials: texting
+  // consumers has TCPA exposure, so credentials alone must never
+  // silently enable it. Set SMS_ENABLED=true only after consent
+  // copy, STOP handling, and the sending number are reviewed.
+  const smsExplicitlyEnabled = process.env.SMS_ENABLED === "true";
   return {
     email: { enabled: Boolean(email.apiKey && email.from), ...email },
-    sms: { enabled: Boolean(sms.accountSid && sms.authToken && sms.from), ...sms },
+    sms: {
+      enabled: smsExplicitlyEnabled && Boolean(sms.accountSid && sms.authToken && sms.from),
+      ...sms,
+    },
     crm: {
       enabled: Boolean(process.env.CRM_WEBHOOK_URL),
       webhookUrl: process.env.CRM_WEBHOOK_URL,
@@ -47,13 +55,18 @@ export function integrationConfig(): IntegrationConfig {
   };
 }
 
-/** Status table for the Agent Console / debugging. */
+/** Status table for the Agent Console / debugging. Internal only —
+ * never render these states on a consumer-facing screen. */
 export function integrationStatus(): { name: string; live: boolean; requires: string }[] {
   const c = integrationConfig();
   return [
     { name: "Email (Resend)", live: c.email.enabled, requires: "RESEND_API_KEY + LEAD_EMAIL_FROM" },
-    { name: "SMS (Twilio)", live: c.sms.enabled, requires: "TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN + TWILIO_FROM" },
+    { name: "SMS (Twilio)", live: c.sms.enabled, requires: "SMS_ENABLED=true + TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN + TWILIO_FROM" },
     { name: "CRM webhook", live: c.crm.enabled, requires: "CRM_WEBHOOK_URL" },
     { name: "Calendar booking", live: c.calendar.enabled, requires: "NEXT_PUBLIC_CAL_BOOKING_URL" },
   ];
 }
+
+/** Shared timeout for outbound provider calls — a slow provider must
+ * never hang the lead submission. */
+export const PROVIDER_TIMEOUT_MS = 8000;

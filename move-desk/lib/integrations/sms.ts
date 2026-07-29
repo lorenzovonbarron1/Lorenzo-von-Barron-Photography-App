@@ -1,15 +1,17 @@
 import type { DeliveryResult, SmsMessage } from "./index";
-import { integrationConfig } from "./config";
+import { integrationConfig, PROVIDER_TIMEOUT_MS } from "./config";
 
-// SMS delivery. Live path = Twilio when all three TWILIO_* vars are
-// set. Consent is enforced upstream (in the API route) — this layer
-// only transports.
+// SMS delivery. Live path = Twilio, and ONLY when SMS_ENABLED=true is
+// set on top of the three TWILIO_* credentials — texting consumers has
+// TCPA exposure, so it stays off until consent copy and STOP handling
+// are explicitly reviewed. Lead-level consent is enforced upstream (in
+// the API route) — this layer only transports.
 export async function sendSms(msg: SmsMessage): Promise<DeliveryResult> {
   const { sms } = integrationConfig();
 
   if (!sms.enabled) {
     console.info("[sms:mock]", { to: msg.to });
-    return { channel: "sms", live: false, ok: true, detail: "mocked — set TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN + TWILIO_FROM" };
+    return { channel: "sms", live: false, ok: true, detail: "mocked — requires SMS_ENABLED=true + TWILIO_* credentials" };
   }
   try {
     const body = new URLSearchParams({ To: msg.to, From: sms.from!, Body: msg.body });
@@ -20,6 +22,7 @@ export async function sendSms(msg: SmsMessage): Promise<DeliveryResult> {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body,
+      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
     });
     if (!res.ok) return { channel: "sms", live: true, ok: false, detail: `Twilio ${res.status}` };
     return { channel: "sms", live: true, ok: true };

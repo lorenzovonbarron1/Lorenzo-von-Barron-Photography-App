@@ -1,5 +1,5 @@
 import type { DeliveryResult, EmailMessage } from "./index";
-import { integrationConfig } from "./config";
+import { integrationConfig, PROVIDER_TIMEOUT_MS } from "./config";
 
 // Email delivery. Live path = Resend when RESEND_API_KEY +
 // LEAD_EMAIL_FROM are set. Mock path logs and reports live:false so
@@ -16,6 +16,7 @@ export async function sendEmail(msg: EmailMessage): Promise<DeliveryResult> {
       method: "POST",
       headers: { Authorization: `Bearer ${email.apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({ from: email.from, to: msg.to, subject: msg.subject, text: msg.body, reply_to: msg.replyTo }),
+      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
     });
     if (!res.ok) return { channel: "email", live: true, ok: false, detail: `Resend ${res.status}` };
     return { channel: "email", live: true, ok: true };

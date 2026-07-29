@@ -4,9 +4,10 @@ import { buildAutoBrief } from "@/lib/autobrief";
 import { AGENT } from "@/lib/agent.config";
 import { sendEmail } from "@/lib/integrations/email";
 import { sendSms } from "@/lib/integrations/sms";
-import { persistLead } from "@/lib/integrations/crm";
+import { persistLead, recordDelivery } from "@/lib/integrations/crm";
 import { integrationConfig } from "@/lib/integrations/config";
 import { attributionChips } from "@/lib/attribution";
+import type { DeliveryResult } from "@/lib/integrations";
 
 export const runtime = "nodejs";
 
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
 
   // Persist first (source of truth) so a lead is never lost even if
   // notifications fail.
-  const delivery = [] as { channel: string; live: boolean; ok: boolean; detail?: string }[];
+  const delivery: DeliveryResult[] = [];
   delivery.push(await persistLead(lead, brief));
 
   // Notify the agent (env overrides beat agent config — see
@@ -72,7 +73,18 @@ export async function POST(req: Request) {
     delivery.push(await sendSms({ to: lead.phone, body: `Thanks ${lead.name}! ${AGENT.name} will reach out shortly. Reply STOP to opt out.` }));
   }
 
-  return NextResponse.json({ ok: true, id: lead.id, brief, delivery });
+  // Attach delivery outcomes to the stored lead (Agent Console only),
+  // and log failures server-side — channel + detail carry status codes
+  // and provider names, never credentials.
+  recordDelivery(lead.id, delivery);
+  for (const d of delivery) {
+    if (!d.ok) console.error(`[lead:${lead.id}] ${d.channel} delivery FAILED — ${d.detail || "no detail"}`);
+  }
+
+  // Consumer response is intentionally minimal: no brief, no delivery
+  // internals. The visitor's experience never depends on (or reveals)
+  // which channels are live vs mocked.
+  return NextResponse.json({ ok: true, id: lead.id });
 }
 
 function agentEmailBody(brief: ReturnType<typeof buildAutoBrief>): string {

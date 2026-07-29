@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { AGENT } from "@/lib/agent.config";
-import { recentLeads } from "@/lib/integrations/crm";
+import { recentLeads, type LeadRecord } from "@/lib/integrations/crm";
 import { integrationStatus } from "@/lib/integrations/config";
+import type { DeliveryResult } from "@/lib/integrations";
 import { buildAutoBrief } from "@/lib/autobrief";
 import { attributionChips } from "@/lib/attribution";
 import type { BuyerLead } from "@/lib/leads";
@@ -27,7 +28,23 @@ export default function AgentBriefPage() {
     },
     agentId: AGENT.id, createdAt: new Date().toISOString(),
   };
-  const briefs = captured.length ? captured.map((c) => c.brief) : [buildAutoBrief(sample)];
+  // Newest first (recentLeads reverses). Seeded example when empty,
+  // with representative mocked delivery so the layout reads true.
+  const entries: LeadRecord[] = captured.length
+    ? captured
+    : [{
+        lead: sample,
+        brief: buildAutoBrief(sample),
+        delivery: [
+          { channel: "crm", live: false, ok: true, detail: "mocked" },
+          { channel: "email", live: false, ok: true, detail: "mocked" },
+        ],
+      }];
+
+  const deliveryLabel = (d: DeliveryResult) =>
+    !d.live ? "mocked" : d.ok ? "delivered" : "failed";
+  const deliveryColor = (d: DeliveryResult) =>
+    !d.live ? "var(--stone-300)" : d.ok ? "#7ee0a0" : "#ff8f8f";
 
   return (
     <main className="page">
@@ -40,7 +57,7 @@ export default function AgentBriefPage() {
         <h1 className="headline">Auto-Briefs</h1>
 
         <div className="stack gap-m" style={{ marginTop: 8 }}>
-          {briefs.map((b) => (
+          {entries.map(({ brief: b, delivery }) => (
             <article key={b.leadId} className="card stack gap-s">
               <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                 <span className="path-card__title">{b.headline}</span>
@@ -63,7 +80,17 @@ export default function AgentBriefPage() {
                   <span key={c} className="chip" style={{ fontSize: "0.8rem", minHeight: 36, padding: "8px 12px" }}>{c}</span>
                 ))}
               </div>
-              <p className="path-card__desc" style={{ color: "var(--stone-500)" }}>Consent: {new Date(b.consentAt).toLocaleString()}</p>
+              {/* Per-lead delivery outcomes — internal only */}
+              <p className="path-card__desc" style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "baseline" }}>
+                {delivery.map((d, i) => (
+                  <span key={`${d.channel}-${i}`} style={{ color: deliveryColor(d), fontSize: "0.8rem" }}>
+                    {`${d.channel}: ${deliveryLabel(d)}`}
+                  </span>
+                ))}
+                <span style={{ color: "var(--stone-500)", fontSize: "0.8rem" }}>
+                  Consent: {new Date(b.consentAt).toLocaleString()}
+                </span>
+              </p>
             </article>
           ))}
         </div>
