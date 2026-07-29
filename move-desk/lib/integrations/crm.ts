@@ -3,43 +3,18 @@ import type { Lead } from "@/lib/leads";
 import type { AutoBrief } from "@/lib/autobrief";
 import { integrationConfig, PROVIDER_TIMEOUT_MS } from "./config";
 
-// Source-of-truth persistence. Live path = a generic CRM webhook
-// (Follow Up Boss / Airtable / Zapier catch-hook) when CRM_WEBHOOK_URL
-// is set. Mock path keeps leads in memory for the demo Agent Console.
-//
-// Each stored entry also carries the lead's per-channel delivery
-// results (recorded after notifications run) so the Agent Console can
-// show mocked / delivered / failed — internally only. This status is
-// never returned to the consumer client.
-export interface LeadRecord {
-  lead: Lead;
-  brief: AutoBrief;
-  delivery: DeliveryResult[];
-}
-
-const memory: LeadRecord[] = [];
-
-/** Newest first. */
-export function recentLeads(limit = 25): LeadRecord[] {
-  return memory.slice(-limit).reverse();
-}
-
-/** Attach delivery outcomes to an already-persisted lead. */
-export function recordDelivery(leadId: string, results: DeliveryResult[]): void {
-  const entry = memory.find((m) => m.lead.id === leadId);
-  if (entry) entry.delivery = results;
-}
-
-export async function persistLead(lead: Lead, brief: AutoBrief): Promise<DeliveryResult> {
-  memory.push({ lead, brief, delivery: [] });
-
+// CRM delivery — POSTs { lead, brief } to a generic webhook
+// (Follow Up Boss inbound / Airtable automation / Zapier catch-hook)
+// when CRM_WEBHOOK_URL is set. Persistence itself lives in
+// lib/integrations/store.ts; this module is transport only, so a CRM
+// outage can never lose a lead.
+export async function sendToCrm(lead: Lead, brief: AutoBrief): Promise<DeliveryResult> {
   const { crm } = integrationConfig();
   if (!crm.enabled) {
-    return { channel: "crm", live: false, ok: true, detail: "mocked (in-memory; set CRM_WEBHOOK_URL)" };
+    return { channel: "crm", live: false, ok: true, detail: "mocked — set CRM_WEBHOOK_URL" };
   }
-  const url = crm.webhookUrl!;
   try {
-    const res = await fetch(url, {
+    const res = await fetch(crm.webhookUrl!, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lead, brief }),

@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { timingSafeEqual } from "node:crypto";
 import { AGENT } from "@/lib/agent.config";
-import { recentLeads, type LeadRecord } from "@/lib/integrations/crm";
+import { listLeads, persistenceSummary, type StoredLead } from "@/lib/integrations/store";
 import { integrationStatus } from "@/lib/integrations/config";
 import type { DeliveryResult } from "@/lib/integrations";
 import { buildAutoBrief } from "@/lib/autobrief";
@@ -9,11 +10,55 @@ import type { BuyerLead } from "@/lib/leads";
 
 export const dynamic = "force-dynamic";
 
-// Demo Agent Console — the Auto-Brief preview. Shows leads captured
-// this server session (in-memory mock) plus one seeded example so the
-// layout is never empty. Protect behind real auth before production.
-export default function AgentBriefPage() {
-  const captured = recentLeads();
+// ── Access control ───────────────────────────────────────────
+// The console shows lead PII, so it is never publicly reachable in
+// production:
+//   - AGENT_CONSOLE_TOKEN set  → ?token=<value> required (any env).
+//   - token unset + production → locked page, no lead data rendered.
+//   - token unset + development → open (local demo only).
+// Defense in depth: also protect the /agent path at the host
+// (Vercel Protection / basic-auth proxy) — see DEPLOYMENT.md.
+function accessAllowed(provided: string | undefined): boolean {
+  const required = process.env.AGENT_CONSOLE_TOKEN;
+  if (required) {
+    if (!provided) return false;
+    const a = Buffer.from(provided.padEnd(256, "\0"));
+    const b = Buffer.from(required.padEnd(256, "\0"));
+    return a.length === b.length && timingSafeEqual(a, b) && provided.length === required.length;
+  }
+  return process.env.NODE_ENV !== "production";
+}
+
+function LockedScreen() {
+  return (
+    <main className="page">
+      <section className="section wrap stack gap-m" style={{ maxWidth: 620 }}>
+        <Link href="/" className="eyebrow">← Move Desk</Link>
+        <h1 className="headline">Agent Console is locked.</h1>
+        <p className="body">
+          This area contains lead details and is not publicly accessible. Open it with your
+          console link (<code>/agent/brief?token=…</code>).
+        </p>
+        <p className="notice notice--warn" style={{ maxWidth: 560 }}>
+          Operator setup: set <code>AGENT_CONSOLE_TOKEN</code> in the server environment and use
+          <code>?token=&lt;value&gt;</code>. Without a token the console only opens in local
+          development. See DEPLOYMENT.md.
+        </p>
+      </section>
+    </main>
+  );
+}
+
+export default async function AgentBriefPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string }>;
+}) {
+  const sp = await searchParams;
+  if (!accessAllowed(sp.token)) return <LockedScreen />;
+
+  const captured = await listLeads();
+  const persistence = persistenceSummary();
 
   const sample: BuyerLead = {
     id: "sample", type: "buyer", name: "Jordan Rivera", contactMethod: "text",
@@ -28,36 +73,35 @@ export default function AgentBriefPage() {
     },
     agentId: AGENT.id, createdAt: new Date().toISOString(),
   };
-  // Newest first (recentLeads reverses). Seeded example when empty,
+  // Newest first (listLeads orders desc). Seeded example when empty,
   // with representative mocked delivery so the layout reads true.
-  const entries: LeadRecord[] = captured.length
+  const entries: StoredLead[] = captured.length
     ? captured
     : [{
-        lead: sample,
-        brief: buildAutoBrief(sample),
+        id: sample.id, createdAt: sample.createdAt, type: "buyer", consentAt: sample.createdAt,
+        lead: sample, brief: buildAutoBrief(sample),
         delivery: [
           { channel: "crm", live: false, ok: true, detail: "mocked" },
           { channel: "email", live: false, ok: true, detail: "mocked" },
         ],
+        persistence: { mode: "memory", persisted: false, detail: "seeded example" },
       }];
 
-  const deliveryLabel = (d: DeliveryResult) =>
-    !d.live ? "mocked" : d.ok ? "delivered" : "failed";
-  const deliveryColor = (d: DeliveryResult) =>
-    !d.live ? "var(--stone-300)" : d.ok ? "#7ee0a0" : "#ff8f8f";
+  const deliveryLabel = (d: DeliveryResult) => (!d.live ? "mocked" : d.ok ? "delivered" : "failed");
+  const deliveryColor = (d: DeliveryResult) => (!d.live ? "var(--stone-300)" : d.ok ? "#7ee0a0" : "#ff8f8f");
 
   return (
     <main className="page">
       <section className="section wrap stack gap-m">
         <Link href="/" className="eyebrow">← Move Desk</Link>
         <p className="notice notice--warn" style={{ maxWidth: 620 }}>
-          Demo Agent Console — protect behind real authentication before production. Captured leads are
-          in-memory for this server session{captured.length ? "" : " (showing a seeded example)"}.
+          Internal Agent Console. Lead store: {persistence.detail}
+          {captured.length ? "" : " (showing a seeded example)"}.
         </p>
         <h1 className="headline">Auto-Briefs</h1>
 
         <div className="stack gap-m" style={{ marginTop: 8 }}>
-          {entries.map(({ brief: b, delivery }) => (
+          {entries.map(({ brief: b, delivery, persistence: p }) => (
             <article key={b.leadId} className="card stack gap-s">
               <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
                 <span className="path-card__title">{b.headline}</span>
@@ -80,13 +124,16 @@ export default function AgentBriefPage() {
                   <span key={c} className="chip" style={{ fontSize: "0.8rem", minHeight: 36, padding: "8px 12px" }}>{c}</span>
                 ))}
               </div>
-              {/* Per-lead delivery outcomes — internal only */}
+              {/* Delivery + persistence — internal only */}
               <p className="path-card__desc" style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "baseline" }}>
                 {delivery.map((d, i) => (
                   <span key={`${d.channel}-${i}`} style={{ color: deliveryColor(d), fontSize: "0.8rem" }}>
                     {`${d.channel}: ${deliveryLabel(d)}`}
                   </span>
                 ))}
+                <span style={{ color: p.persisted ? "#7ee0a0" : "var(--lynk-bright)", fontSize: "0.8rem" }}>
+                  {p.persisted ? "stored: durable" : `stored: ${p.mode}`}
+                </span>
                 <span style={{ color: "var(--stone-500)", fontSize: "0.8rem" }}>
                   Consent: {new Date(b.consentAt).toLocaleString()}
                 </span>
@@ -106,6 +153,15 @@ export default function AgentBriefPage() {
                 {!s.live && <span style={{ color: "var(--stone-500)", fontSize: "0.8rem" }}>needs {s.requires}</span>}
               </li>
             ))}
+            <li className="body" style={{ display: "flex", gap: 10, alignItems: "baseline", flexWrap: "wrap" }}>
+              <span style={{ color: persistence.durable ? "#7ee0a0" : "var(--lynk-bright)" }}>
+                {persistence.durable ? "● durable" : "○ demo"}
+              </span>
+              <span>Lead store</span>
+              {!persistence.durable && (
+                <span style={{ color: "var(--stone-500)", fontSize: "0.8rem" }}>needs LEAD_STORE=file (+ persistent disk) or CRM_WEBHOOK_URL</span>
+              )}
+            </li>
           </ul>
         </div>
       </section>

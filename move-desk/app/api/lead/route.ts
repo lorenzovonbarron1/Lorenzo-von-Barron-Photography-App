@@ -4,7 +4,8 @@ import { buildAutoBrief } from "@/lib/autobrief";
 import { AGENT } from "@/lib/agent.config";
 import { sendEmail } from "@/lib/integrations/email";
 import { sendSms } from "@/lib/integrations/sms";
-import { persistLead, recordDelivery } from "@/lib/integrations/crm";
+import { sendToCrm } from "@/lib/integrations/crm";
+import { saveLead, updateDelivery } from "@/lib/integrations/store";
 import { integrationConfig } from "@/lib/integrations/config";
 import { attributionChips } from "@/lib/attribution";
 import type { DeliveryResult } from "@/lib/integrations";
@@ -41,9 +42,11 @@ export async function POST(req: Request) {
   const { notify } = integrationConfig();
 
   // Persist first (source of truth) so a lead is never lost even if
-  // notifications fail.
+  // notifications fail. The stored record carries its own persistence
+  // status (memory vs durable file) — internal only.
+  const stored = await saveLead(lead, brief);
   const delivery: DeliveryResult[] = [];
-  delivery.push(await persistLead(lead, brief));
+  delivery.push(await sendToCrm(lead, brief));
 
   // Notify the agent (env overrides beat agent config — see
   // docs/INTEGRATIONS.md).
@@ -76,7 +79,7 @@ export async function POST(req: Request) {
   // Attach delivery outcomes to the stored lead (Agent Console only),
   // and log failures server-side — channel + detail carry status codes
   // and provider names, never credentials.
-  recordDelivery(lead.id, delivery);
+  await updateDelivery(stored.id, delivery);
   for (const d of delivery) {
     if (!d.ok) console.error(`[lead:${lead.id}] ${d.channel} delivery FAILED — ${d.detail || "no detail"}`);
   }

@@ -4,6 +4,8 @@
 /build
 .env
 .env*.local
+/.data
+/.verify-data-*
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store

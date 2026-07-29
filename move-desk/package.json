@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "check-env": "node scripts/check-env.mjs",
+    "smoke:email": "node scripts/smoke-email.mjs"
   },
   "dependencies": {
     "next": "^15.3.3",
