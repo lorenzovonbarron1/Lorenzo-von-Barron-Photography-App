@@ -1,9 +1,34 @@
 # DEPLOYMENT.md — LYNK Move Desk
 
 Server-rendered Next.js app (`/api/lead` must run server-side). Node 18.18+.
-Works on any Node host: a VPS/Docker/Fly machine (recommended — enables the
-durable file store) or Vercel/serverless (use the CRM webhook as system of
-record). Do each step in order; verify before moving on.
+Do each step in order; verify before moving on.
+
+## Supported hosting models (exactly two)
+
+1. **Persistent-volume host** (VPS, Docker, Fly.io machine with a volume):
+   run with `LEAD_STORE=file`. Durable, restart-verified lead records on disk.
+2. **Serverless host** (Vercel and similar): local disk is ephemeral — do NOT
+   use `LEAD_STORE=file` without a mounted volume. Set `CRM_WEBHOOK_URL` and
+   treat the CRM as the durable source of truth.
+
+Any other combination (serverless + file store, or neither persistence path
+configured) is demo mode, not production.
+
+## Recommended deployment
+
+- **Preferred host:** a small always-on machine — **Fly.io with a mounted
+  volume** (or any Docker VPS). It enables the verified file store, keeps the
+  in-memory console session stable, and costs a few dollars a month.
+- **Volume configuration (file store):** mount a persistent volume and point
+  the store at it, e.g. Fly: `fly volumes create movedesk_data`, mount at
+  `/data`, set `LEAD_STORE=file` + `LEAD_STORE_DIR=/data/leads`. Confirm
+  durability on the host itself: submit a test lead, restart the machine,
+  confirm the lead is still on the console.
+- **Second layer for `/agent/*` (required before live traffic):** the
+  `?token=` gate is a solid app-level lock, but lead PII deserves two locks.
+  Put the path behind **Cloudflare Access** or basic auth at the proxy
+  (Vercel: Deployment Protection). Do not launch with the token as the only
+  barrier.
 
 ## 0. Build sanity (local)
 
