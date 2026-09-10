@@ -4,378 +4,240 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
 <style>
   :root{
-    /* Committed single world: a lighting console in a dark saloon.
-       Warm smoke, not cool chrome — deliberately distinct from LYNK Superleggera. */
     --smoke:#14100D; --panel:#1C1714; --panel-2:#241E19; --panel-3:#2E2721;
     --ash:#3A322B; --ash-soft:#2A241F;
     --bone:#EDE4D6; --bone-dim:#A2988A; --bone-faint:#7A7066;
     --amber:#E0A63B; --amber-bright:#F2BE5C; --amber-deep:#8A6420;
     --red:#E0574A; --red-deep:#C4392C;
-    --sage:#82B45C; --blue:#5FB0D4; --clay:#8A7D6E;
+    --clay:#8A7D6E;
+    /* Demand states — hue separated, and never load-bearing on their own:
+       every cell also carries a text code, and UNKNOWN carries a hatch. */
+    --st-over:#E0574A; --st-ok:#4FA882; --st-opp:#E0A63B; --st-prot:#A98BC4; --st-unk:#8A7D6E;
     --display:"Big Shoulders Display","Arial Narrow","Helvetica Neue Condensed",system-ui,sans-serif;
     --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
     --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
-    --hair:1px solid var(--ash);
-    --hair-soft:1px solid var(--ash-soft);
+    --hair:1px solid var(--ash); --hair-soft:1px solid var(--ash-soft);
   }
   *{box-sizing:border-box}
-  body{
-    background:var(--smoke); color:var(--bone);
-    font-family:var(--sans); font-size:14px; line-height:1.55;
-    margin:0; padding:0;
-    -webkit-font-smoothing:antialiased;
-  }
+  body{background:var(--smoke); color:var(--bone); font-family:var(--sans); font-size:14px; line-height:1.55; margin:0; -webkit-font-smoothing:antialiased}
   .wrap{max-width:1180px; margin:0 auto; padding-inline:16px; padding-block:0 56px}
 
-  /* ── Marquee masthead ─────────────────────────────── */
-  .masthead{
-    display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px 24px;
-    padding-block:28px 18px; border-bottom:var(--hair);
-  }
+  .masthead{display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px 24px; padding-block:28px 16px; border-bottom:var(--hair)}
   .brandblock{flex:1 1 260px; min-width:0}
-  .brandmark{
-    font-family:var(--display); font-weight:800; font-size:clamp(38px,7.5vw,62px);
-    line-height:.86; letter-spacing:.01em; text-transform:uppercase;
-    color:var(--bone); margin:0; text-wrap:balance;
-  }
+  .brandmark{font-family:var(--display); font-weight:800; font-size:clamp(36px,7vw,58px); line-height:.86; letter-spacing:.01em; text-transform:uppercase; margin:0; text-wrap:balance}
   .brandmark em{font-style:normal; color:var(--amber)}
-  .brandsub{
-    font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
-    color:var(--bone-dim); margin-top:9px;
-  }
+  .brandsub{font-family:var(--mono); font-size:11px; letter-spacing:.15em; text-transform:uppercase; color:var(--bone-dim); margin-top:9px}
   .brandsub b{color:var(--bone-faint); font-weight:400}
-  .mast-right{display:flex; flex-direction:column; align-items:flex-start; gap:8px; padding-bottom:4px}
-  .venue-clock{
-    font-family:var(--mono); font-size:26px; font-weight:500; color:var(--amber);
-    font-variant-numeric:tabular-nums; line-height:1;
-  }
-  .venue-meta{font-family:var(--mono); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--bone-faint)}
-  .demo-badge{
-    display:inline-flex; align-items:center; gap:7px;
-    font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
-    color:var(--red); border:1px solid rgba(224,87,74,.42); background:rgba(196,57,44,.09);
-    padding:4px 9px;
-  }
+  .mast-right{display:flex; flex-direction:column; align-items:flex-start; gap:7px; padding-bottom:3px}
+  .demo-badge{display:inline-flex; align-items:center; gap:7px; font-family:var(--mono); font-size:10px; letter-spacing:.13em; text-transform:uppercase; color:var(--red); border:1px solid rgba(224,87,74,.42); background:rgba(196,57,44,.09); padding:4px 9px}
   .demo-badge::before{content:""; width:5px; height:5px; background:var(--red); border-radius:50%}
+  .acting{font-family:var(--mono); font-size:10px; letter-spacing:.11em; text-transform:uppercase; color:var(--bone-faint); line-height:1.6}
+  .acting b{color:var(--bone-dim); font-weight:500}
+  .acting i{font-style:normal; color:var(--red)}
 
-  /* ── The Set Clock — the spine ─────────────────────── */
-  .setclock{padding-block:20px 0}
-  .sc-head{
-    display:flex; justify-content:space-between; align-items:baseline; gap:16px;
-    flex-wrap:wrap; margin-bottom:10px;
-  }
-  .eyebrow{
-    font-family:var(--mono); font-size:10.5px; font-weight:500; letter-spacing:.19em;
-    text-transform:uppercase; color:var(--bone-faint); font-variant-numeric:tabular-nums;
-  }
+  .eyebrow{font-family:var(--mono); font-size:10.5px; font-weight:500; letter-spacing:.18em; text-transform:uppercase; color:var(--bone-faint); font-variant-numeric:tabular-nums}
   .eyebrow--amber{color:var(--amber)}
-  .sc-lockup{font-family:var(--mono); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--bone-faint)}
-  .sc-lockup b{color:var(--sage); font-weight:500}
-  .sc-track{display:flex; gap:2px; align-items:stretch}
-  .sc-seg{
-    flex:1 1 0; min-width:0; position:relative;
-    background:var(--panel); border-top:2px solid var(--ash);
-    padding:9px 8px 11px;
-  }
-  .sc-seg--show{background:var(--panel-2); border-top-color:var(--amber-deep)}
-  .sc-seg--now{background:var(--panel-3); border-top-color:var(--amber)}
-  .sc-seg--now::after{
-    content:""; position:absolute; left:0; right:0; top:-2px; height:2px;
-    background:var(--amber-bright);
-  }
-  .sc-name{
-    font-family:var(--display); font-weight:700; font-size:15px; letter-spacing:.03em;
-    text-transform:uppercase; color:var(--bone-dim); line-height:1;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
-  .sc-seg--now .sc-name{color:var(--amber-bright)}
-  .sc-seg--show .sc-name{color:var(--bone)}
-  .sc-time{font-family:var(--mono); font-size:10px; color:var(--bone-faint); margin-top:4px; font-variant-numeric:tabular-nums}
-  .sc-nowtag{
-    font-family:var(--mono); font-size:9px; letter-spacing:.14em; color:var(--smoke);
-    background:var(--amber); padding:1px 5px; margin-top:6px; display:inline-block; font-weight:600;
-  }
 
-  /* ── Next best action — the app's thesis, always visible ── */
-  .nba{
-    display:flex; gap:14px; align-items:flex-start;
-    background:linear-gradient(90deg,rgba(224,166,59,.13),rgba(224,166,59,.02) 62%);
-    border-left:3px solid var(--amber); padding:14px 16px; margin-top:18px;
-  }
-  .nba-label{
-    font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
-    color:var(--amber); white-space:nowrap; padding-top:3px; flex:0 0 auto;
-  }
-  .nba-body{flex:1 1 auto; min-width:0}
-  .nba-body p{margin:0; font-size:14.5px; color:var(--bone); max-width:68ch}
-  .nba-body p b{color:var(--amber-bright); font-weight:600}
-  .nba-why{font-family:var(--mono); font-size:10.5px; color:var(--bone-faint); margin-top:6px; letter-spacing:.04em}
+  .question{padding-block:20px 0}
+  .question p{font-family:var(--display); font-weight:600; font-size:clamp(19px,3vw,27px); text-transform:uppercase; line-height:1.1; letter-spacing:.01em; margin:7px 0 0; color:var(--bone); max-width:26ch; text-wrap:balance}
+  .question p em{font-style:normal; color:var(--amber)}
 
-  /* ── Console body ──────────────────────────────────── */
   .console{display:grid; grid-template-columns:196px 1fr; gap:26px; margin-top:26px; align-items:start}
   nav.modules{border-right:var(--hair); padding-right:18px; position:sticky; top:16px}
   .mod-group{margin-bottom:20px}
   .mod-group .eyebrow{display:block; margin-bottom:9px}
-  .mod{
-    display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%;
-    background:none; border:none; border-left:2px solid transparent;
-    color:var(--bone-dim); font-family:var(--sans); font-size:13.5px; text-align:left;
-    padding:7px 8px 7px 10px; cursor:pointer; transition:color .14s, background .14s;
-  }
+  .mod{display:flex; align-items:center; justify-content:space-between; gap:8px; width:100%; background:none; border:none; border-left:2px solid transparent; color:var(--bone-dim); font-family:var(--sans); font-size:13.5px; text-align:left; padding:7px 8px 7px 10px; cursor:pointer; transition:color .14s, background .14s}
   .mod:hover{color:var(--bone); background:var(--panel)}
   .mod[aria-current="true"]{color:var(--amber-bright); border-left-color:var(--amber); background:var(--panel-2); font-weight:600}
   .mod[disabled]{color:var(--bone-faint); cursor:default; opacity:.72}
   .mod[disabled]:hover{background:none; color:var(--bone-faint)}
-  .chip{
-    font-family:var(--mono); font-size:9px; letter-spacing:.1em; padding:1px 5px;
-    border:1px solid var(--ash); color:var(--bone-faint); flex:0 0 auto;
-  }
-  .chip--mvp{border-color:var(--amber-deep); color:var(--amber)}
+  .chip{font-family:var(--mono); font-size:9px; letter-spacing:.09em; padding:1px 5px; border:1px solid var(--ash); color:var(--bone-faint); flex:0 0 auto}
+  .chip--p2{border-color:var(--ash)}
+  .chip--opt{border-color:rgba(224,87,74,.4); color:var(--red)}
 
   main.stage{min-width:0}
   .panel[hidden]{display:none}
   .panel-head{margin-bottom:18px}
-  .panel-title{
-    font-family:var(--display); font-weight:700; font-size:clamp(26px,4vw,36px);
-    text-transform:uppercase; letter-spacing:.015em; line-height:1; margin:6px 0 0;
-    color:var(--bone); text-wrap:balance;
-  }
-  .panel-lede{color:var(--bone-dim); margin:9px 0 0; max-width:66ch; font-size:14px}
+  .panel-title{font-family:var(--display); font-weight:700; font-size:clamp(26px,4vw,36px); text-transform:uppercase; letter-spacing:.015em; line-height:1; margin:6px 0 0; text-wrap:balance}
+  .panel-lede{color:var(--bone-dim); margin:9px 0 0; max-width:66ch}
 
-  /* ── Generic surfaces ─────────────────────────────── */
   .card{background:var(--panel); border:var(--hair-soft); padding:16px 18px}
   .grid{display:grid; gap:14px}
   .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
   .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
   .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
-  .stat-k{font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--bone-faint)}
-  .stat-v{font-family:var(--display); font-weight:700; font-size:30px; line-height:1.05; margin-top:6px; font-variant-numeric:tabular-nums; color:var(--bone)}
+  .stat-k{font-family:var(--mono); font-size:10px; letter-spacing:.13em; text-transform:uppercase; color:var(--bone-faint)}
+  .stat-v{font-family:var(--display); font-weight:700; font-size:30px; line-height:1.05; margin-top:6px; font-variant-numeric:tabular-nums}
   .stat-n{font-size:12px; color:var(--bone-dim); margin-top:5px}
 
-  .pill{
-    display:inline-flex; align-items:center; gap:5px;
-    font-family:var(--mono); font-size:9.5px; font-weight:600; letter-spacing:.12em;
-    text-transform:uppercase; padding:2px 7px; border:1px solid;
+  /* ── Demand Grid ───────────────────────────────────── */
+  .gridhead{display:flex; justify-content:space-between; align-items:flex-end; gap:14px; flex-wrap:wrap; margin-bottom:12px}
+  .toggle{display:flex; border:1px solid var(--ash); flex:0 0 auto}
+  .toggle button{background:none; border:none; color:var(--bone-faint); cursor:pointer; font-family:var(--mono); font-size:10px; letter-spacing:.09em; text-transform:uppercase; padding:7px 11px; transition:.14s}
+  .toggle button:hover{color:var(--bone)}
+  .toggle button[aria-pressed="true"]{background:var(--panel-3); color:var(--amber-bright)}
+
+  .dgwrap{overflow-x:auto}
+  .dg{display:grid; grid-template-columns:104px repeat(7,minmax(62px,1fr)); gap:3px; min-width:620px}
+  .dg-corner{}
+  .dg-day{font-family:var(--display); font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:.04em; color:var(--bone-dim); text-align:center; padding-bottom:5px}
+  .dg-part{font-family:var(--mono); font-size:10px; letter-spacing:.09em; text-transform:uppercase; color:var(--bone-faint); display:flex; flex-direction:column; justify-content:center; padding-right:8px; text-align:right; line-height:1.3}
+  .dg-part b{color:var(--bone-dim); font-weight:500; font-size:10.5px}
+  .cell{
+    position:relative; border:1px solid var(--ash); background:var(--panel-2);
+    min-height:52px; cursor:pointer; padding:6px 5px; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:3px; transition:.13s; font-family:var(--mono);
   }
-  .pill::before{content:""; width:5px; height:5px; border-radius:50%; background:currentColor; flex:0 0 auto}
-  .p-scale{color:var(--sage); border-color:rgba(130,180,92,.4); background:rgba(130,180,92,.09)}
-  .p-improve{color:var(--amber); border-color:rgba(224,166,59,.4); background:rgba(224,166,59,.09)}
-  .p-hold{color:var(--clay); border-color:rgba(138,125,110,.45); background:rgba(138,125,110,.09)}
-  .p-test{color:var(--blue); border-color:rgba(95,176,212,.4); background:rgba(95,176,212,.09)}
-  .p-kill{color:var(--red); border-color:rgba(224,87,74,.42); background:rgba(196,57,44,.1)}
+  .cell:hover{border-color:var(--bone-faint)}
+  .cell[aria-pressed="true"]{outline:2px solid var(--amber-bright); outline-offset:1px; z-index:2}
+  .cell .code{font-size:11px; font-weight:600; letter-spacing:.08em}
+  .cell .cv{font-size:9px; color:var(--bone-faint); letter-spacing:.05em}
+  .c-over{background:rgba(224,87,74,.17); border-color:rgba(224,87,74,.5)}
+  .c-over .code{color:var(--st-over)}
+  .c-ok{background:rgba(79,168,130,.15); border-color:rgba(79,168,130,.45)}
+  .c-ok .code{color:var(--st-ok)}
+  .c-opp{background:rgba(224,166,59,.15); border-color:rgba(224,166,59,.45)}
+  .c-opp .code{color:var(--st-opp)}
+  .c-prot{background:rgba(169,139,196,.15); border-color:var(--st-prot); box-shadow:inset 0 0 0 2px rgba(169,139,196,.3)}
+  .c-prot .code{color:var(--st-prot)}
+  .c-unk{
+    background-color:var(--panel-2);
+    background-image:repeating-linear-gradient(45deg,rgba(138,125,110,.16) 0 4px,transparent 4px 8px);
+    border-color:var(--ash);
+  }
+  .c-unk .code{color:var(--clay)}
+  .legend{display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:14px; padding-top:12px; border-top:var(--hair-soft)}
+  .lg{display:flex; align-items:center; gap:7px; font-family:var(--mono); font-size:10px; letter-spacing:.09em; text-transform:uppercase; color:var(--bone-faint)}
+  .lg i{width:11px; height:11px; border:1px solid; flex:0 0 auto; font-style:normal}
+  .lg-over i{background:rgba(224,87,74,.35); border-color:var(--st-over)}
+  .lg-ok i{background:rgba(79,168,130,.35); border-color:var(--st-ok)}
+  .lg-opp i{background:rgba(224,166,59,.35); border-color:var(--st-opp)}
+  .lg-prot i{background:rgba(169,139,196,.3); border-color:var(--st-prot); box-shadow:inset 0 0 0 2px rgba(169,139,196,.45)}
+  .lg-unk i{background-image:repeating-linear-gradient(45deg,rgba(138,125,110,.5) 0 3px,transparent 3px 6px); border-color:var(--clay)}
+
+  /* ── Cell detail ───────────────────────────────────── */
+  .detail{margin-top:16px}
+  .dt-head{display:flex; flex-wrap:wrap; gap:12px 18px; align-items:baseline; justify-content:space-between; padding-bottom:12px; border-bottom:var(--hair)}
+  .dt-when{font-family:var(--display); font-weight:700; font-size:24px; text-transform:uppercase; letter-spacing:.02em; line-height:1; margin:0}
+  .statepill{display:inline-flex; align-items:center; gap:7px; font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.13em; text-transform:uppercase; padding:4px 10px; border:1px solid}
+  .sp-over{color:var(--st-over); border-color:var(--st-over); background:rgba(224,87,74,.1)}
+  .sp-ok{color:var(--st-ok); border-color:var(--st-ok); background:rgba(79,168,130,.1)}
+  .sp-opp{color:var(--st-opp); border-color:var(--st-opp); background:rgba(224,166,59,.1)}
+  .sp-prot{color:var(--st-prot); border-color:var(--st-prot); background:rgba(169,139,196,.1)}
+  .sp-unk{color:var(--clay); border-color:var(--clay); background:rgba(138,125,110,.1)}
+
+  .modes{display:flex; flex-wrap:wrap; gap:6px; margin-top:14px}
+  .modebtn{font-family:var(--mono); font-size:10px; letter-spacing:.11em; text-transform:uppercase; padding:7px 12px; border:1px solid var(--ash); background:none; color:var(--bone-faint); cursor:pointer; transition:.14s}
+  .modebtn:hover:not(:disabled){color:var(--bone); border-color:var(--clay)}
+  .modebtn[aria-pressed="true"]{background:var(--panel-3); color:var(--amber-bright); border-color:var(--amber-deep)}
+  .modebtn:disabled{opacity:.35; cursor:not-allowed}
+  .modenote{font-family:var(--mono); font-size:10.5px; color:var(--bone-faint); margin-top:9px; line-height:1.6; letter-spacing:.03em}
+  .modenote b{color:var(--amber)}
+
+  .evid{display:flex; flex-wrap:wrap; gap:6px 10px; margin-top:14px}
+  .ev{font-family:var(--mono); font-size:10px; letter-spacing:.06em; color:var(--bone-dim); border:1px solid var(--ash-soft); background:var(--panel-2); padding:4px 8px}
+  .ev b{color:var(--bone); font-weight:500}
+  .ev.miss{color:var(--red); border-color:rgba(224,87,74,.3)}
+
+  .recs{margin-top:22px}
+  .rec{border-left:3px solid var(--ash); background:var(--panel-2); padding:12px 14px; margin-bottom:8px}
+  .rec--pri{border-left-color:var(--amber)}
+  .rec-top{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; margin-bottom:5px}
+  .rec-cls{font-family:var(--mono); font-size:9px; letter-spacing:.13em; text-transform:uppercase; color:var(--bone-faint); border:1px solid var(--ash); padding:1px 6px}
+  .rec--pri .rec-cls{color:var(--amber); border-color:var(--amber-deep)}
+  .rec p{margin:0; font-size:13.5px; color:var(--bone); max-width:64ch}
+  .impact{display:flex; flex-wrap:wrap; gap:5px; margin-top:9px}
+  .im{font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; padding:2px 6px; border:1px solid var(--ash-soft); color:var(--bone-faint)}
+  .im--app{color:var(--bone-dim); border-color:var(--ash)}
+  .im--hot{color:var(--red); border-color:rgba(224,87,74,.35)}
+  .im--do{color:var(--st-ok); border-color:rgba(79,168,130,.35)}
+
+  .blocked{margin-top:20px; padding-top:16px; border-top:var(--hair)}
+  .blk{display:flex; gap:11px; align-items:flex-start; padding:10px 0; border-bottom:var(--hair-soft)}
+  .blk:last-child{border-bottom:none}
+  .blk-x{font-family:var(--mono); font-size:13px; color:var(--red); flex:0 0 auto; line-height:1.3}
+  .blk-b{flex:1 1 auto; min-width:0}
+  .blk-t{font-size:13.5px; color:var(--bone-faint); text-decoration:line-through; text-decoration-color:rgba(224,87,74,.55)}
+  .blk-r{font-family:var(--mono); font-size:10px; letter-spacing:.06em; color:var(--red); margin-top:4px}
 
   table{width:100%; border-collapse:collapse; font-size:13px}
   .tblwrap{overflow-x:auto}
-  th{
-    font-family:var(--mono); font-size:10px; letter-spacing:.13em; text-transform:uppercase;
-    color:var(--bone-faint); text-align:left; font-weight:500;
-    padding:8px 10px; border-bottom:var(--hair); white-space:nowrap;
-  }
+  th{font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--bone-faint); text-align:left; font-weight:500; padding:8px 10px; border-bottom:var(--hair); white-space:nowrap}
   td{padding:10px; border-bottom:var(--hair-soft); color:var(--bone-dim); vertical-align:middle}
   td.num{font-family:var(--mono); font-variant-numeric:tabular-nums; text-align:right; color:var(--bone)}
   td.name{color:var(--bone); font-weight:500}
   tbody tr:hover td{background:rgba(46,39,33,.5)}
+  .free{font-family:var(--mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:var(--st-ok); border:1px solid rgba(79,168,130,.35); padding:1px 5px; white-space:nowrap}
 
-  /* ── THE RAIL ─────────────────────────────────────── */
-  .rail-lay{display:grid; grid-template-columns:288px 1fr; gap:22px; align-items:start}
+  .lead{display:grid; grid-template-columns:1fr auto; gap:6px 16px; padding:13px 0 13px 13px; border-bottom:var(--hair-soft); border-left:3px solid transparent}
+  .lead--late{border-left-color:var(--red); background:rgba(196,57,44,.05)}
+  .lead--warn{border-left-color:var(--amber)}
+  .lead-n{color:var(--bone); font-weight:600; font-size:14px}
+  .lead-m{font-family:var(--mono); font-size:10.5px; color:var(--bone-faint); letter-spacing:.05em; margin-top:3px}
+  .lead-route{font-size:12.5px; color:var(--st-ok); margin-top:6px}
+  .lead-route b{color:var(--bone)}
+  .lead-r{text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums}
+  .lead-v{font-size:15px; color:var(--bone)}
+  .lead-t{font-size:10.5px; letter-spacing:.08em; margin-top:3px; color:var(--bone-faint); text-transform:uppercase}
+  .lead--late .lead-t{color:var(--red)}
+  .lead--warn .lead-t{color:var(--amber)}
 
-  .phone{
-    background:var(--smoke); border:1px solid var(--ash); padding:14px 13px 16px;
-    box-shadow:0 0 0 6px rgba(0,0,0,.35);
-  }
-  .phone-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px}
-  .boottag{font-family:var(--mono); font-size:11px; color:var(--amber); letter-spacing:.09em}
-  .zonetag{font-family:var(--mono); font-size:9.5px; color:var(--bone-faint); letter-spacing:.12em}
-  .phone-q{
-    font-family:var(--display); font-weight:700; font-size:21px; text-transform:uppercase;
-    line-height:.98; color:var(--bone); margin:0 0 3px;
-  }
-  .phone-sub{font-size:11.5px; color:var(--bone-faint); margin:0 0 12px}
-  .items{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:14px}
-  .item{
-    background:var(--panel-2); border:1px solid var(--ash); color:var(--bone-dim);
-    padding:9px 4px 8px; cursor:pointer; font-family:var(--sans); font-size:10px;
-    display:flex; flex-direction:column; align-items:center; gap:5px; transition:.14s;
-  }
-  .item:hover{border-color:var(--clay); color:var(--bone)}
-  .item[aria-pressed="true"]{border-color:var(--amber); background:rgba(224,166,59,.13); color:var(--amber-bright)}
-  .iname{font-family:var(--display); font-weight:700; font-size:16px; text-transform:uppercase; letter-spacing:.02em; line-height:1}
-  .iprice{font-family:var(--mono); font-size:10.5px; color:var(--bone-faint); font-variant-numeric:tabular-nums}
-  .item[aria-pressed="true"] .iprice{color:var(--amber)}
-  .win{display:flex; flex-direction:column; gap:6px; margin-bottom:13px}
-  .winbtn{
-    display:flex; justify-content:space-between; align-items:center; gap:10px;
-    background:var(--panel-2); border:1px solid var(--ash); color:var(--bone);
-    padding:11px 12px; cursor:pointer; font-family:var(--sans); text-align:left; transition:.14s;
-  }
-  .winbtn:hover{border-color:var(--clay)}
-  .winbtn[aria-pressed="true"]{border-color:var(--amber); background:rgba(224,166,59,.13)}
-  .winbtn b{font-size:14px; font-weight:600; display:block}
-  .winbtn[aria-pressed="true"] b{color:var(--amber-bright)}
-  .winbtn small{font-family:var(--mono); font-size:9.5px; color:var(--bone-faint); letter-spacing:.08em}
-  .winbtn .land{font-family:var(--mono); font-size:11px; color:var(--bone-dim); white-space:nowrap; font-variant-numeric:tabular-nums}
-  .send{
-    width:100%; background:var(--amber); color:var(--smoke); border:none;
-    font-family:var(--display); font-weight:700; font-size:18px; letter-spacing:.05em;
-    text-transform:uppercase; padding:13px; cursor:pointer; transition:.14s;
-  }
-  .send:hover:not(:disabled){background:var(--amber-bright)}
-  .send:disabled{background:var(--ash); color:var(--bone-faint); cursor:not-allowed}
-  .send.buzz{animation:buzz .32s ease}
-  @keyframes buzz{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
-  .phone-note{font-family:var(--mono); font-size:9.5px; color:var(--bone-faint); margin-top:10px; line-height:1.5; letter-spacing:.03em}
+  .appr{border-left:3px solid var(--ash); background:var(--panel); padding:14px 16px; margin-bottom:10px}
+  .appr--flag{border-left-color:var(--st-prot)}
+  .appr h4{font-family:var(--sans); font-size:14.5px; font-weight:600; margin:0 0 5px}
+  .appr p{margin:0 0 10px; font-size:12.5px; color:var(--bone-dim); max-width:62ch}
+  .appr-acts{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px}
+  .btn{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; padding:7px 13px; border:1px solid var(--ash); background:none; color:var(--bone-dim); cursor:pointer; transition:.14s}
+  .btn:hover{border-color:var(--clay); color:var(--bone)}
+  .btn--yes{border-color:rgba(79,168,130,.45); color:var(--st-ok)}
+  .btn--yes:hover{background:rgba(79,168,130,.12); border-color:var(--st-ok)}
+  .btn--no:hover{background:rgba(196,57,44,.1); border-color:var(--red); color:var(--red)}
+  .appr.done{opacity:.42}
+  .appr.done .appr-acts{display:none}
+  .resolved{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--st-ok)}
+  .resolved.no{color:var(--red)}
 
-  /* Chart */
-  .chart-head{display:flex; justify-content:space-between; align-items:flex-end; gap:14px; flex-wrap:wrap; margin-bottom:4px}
-  .chart-title{font-family:var(--display); font-weight:700; font-size:19px; text-transform:uppercase; letter-spacing:.03em; margin:0; color:var(--bone)}
-  .chart-sub{font-size:12px; color:var(--bone-dim); margin:4px 0 0; max-width:56ch}
-  .toggle{display:flex; border:1px solid var(--ash); flex:0 0 auto}
-  .toggle button{
-    background:none; border:none; color:var(--bone-faint); cursor:pointer;
-    font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
-    padding:7px 11px; transition:.14s;
-  }
-  .toggle button:hover{color:var(--bone)}
-  .toggle button[aria-pressed="true"]{background:var(--panel-3); color:var(--amber-bright)}
-
-  .plot{margin-top:22px; padding-top:14px}
-  .barsarea{position:relative}
-  .overzone{position:absolute; left:0; right:0; top:0; background:rgba(196,57,44,.055); pointer-events:none; z-index:0}
-  .overzone span{position:absolute; left:0; top:5px; font-family:var(--mono); font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; color:rgba(224,87,74,.5)}
-  .cap-line{
-    position:absolute; left:0; right:0; border-top:1px dashed rgba(138,125,110,.75);
-    pointer-events:none; z-index:2;
-  }
-  .cap-label{
-    position:absolute; right:0; top:-9px; font-family:var(--mono); font-size:9.5px;
-    letter-spacing:.1em; color:var(--clay); background:var(--panel); padding:0 5px;
-    text-transform:uppercase;
-  }
-  .bars{display:flex; gap:2px; align-items:flex-end; height:210px; position:relative; z-index:1}
-  .barcol{flex:1 1 0; min-width:0; display:flex; flex-direction:column; justify-content:flex-end; height:100%; cursor:default}
-  .barval{
-    font-family:var(--mono); font-size:11px; font-variant-numeric:tabular-nums;
-    text-align:center; color:var(--bone-dim); margin-bottom:5px; transition:color .2s;
-    position:relative; z-index:3;
-  }
-  .barval b{background:var(--panel); padding:0 4px; font-weight:inherit}
-  .barcol.over .barval{color:var(--red); font-weight:600}
-  .bar{
-    background:var(--amber-deep); border-top:3px solid var(--amber);
-    border-radius:4px 4px 0 0; transition:height .45s cubic-bezier(.22,1,.36,1), background .3s, border-color .3s;
-    min-height:3px;
-  }
-  .barcol.over .bar{background:rgba(196,57,44,.42); border-top-color:var(--red)}
-  .barcol.pop .bar{border-top-color:var(--amber-bright)}
-  .xaxis{display:flex; gap:2px; border-top:var(--hair); padding-top:8px}
-  .xcol{flex:1 1 0; min-width:0; text-align:center}
-  .xname{
-    font-family:var(--display); font-weight:600; font-size:12px; text-transform:uppercase;
-    letter-spacing:.02em; color:var(--bone-dim); line-height:1.05;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  }
-  .xtime{font-family:var(--mono); font-size:9px; color:var(--bone-faint); margin-top:3px; font-variant-numeric:tabular-nums}
-  .overwarn{
-    display:flex; gap:9px; align-items:flex-start; margin-top:16px; padding:11px 13px;
-    border-left:3px solid var(--red); background:rgba(196,57,44,.09); font-size:12.5px; color:var(--bone-dim);
-  }
-  .overwarn b{color:var(--red)}
-  .overwarn.ok{border-left-color:var(--sage); background:rgba(130,180,92,.08)}
-  .overwarn.ok b{color:var(--sage)}
-
-  .queue{margin-top:22px}
-  .qrow{
-    display:flex; align-items:center; gap:12px; padding:9px 0; border-bottom:var(--hair-soft);
-    font-size:13px;
-  }
-  .qrow:last-child{border-bottom:none}
-  .qtag{font-family:var(--mono); font-size:11px; color:var(--amber); letter-spacing:.07em; flex:0 0 92px}
-  .qitem{flex:1 1 auto; min-width:0; color:var(--bone); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-  .qzone{font-family:var(--mono); font-size:10px; color:var(--bone-faint); letter-spacing:.1em; flex:0 0 auto}
-  .qwin{font-family:var(--mono); font-size:10px; letter-spacing:.09em; color:var(--bone-dim); flex:0 0 auto; text-align:right; min-width:86px}
-  .qrow.fresh{animation:fresh 1.4s ease}
-  @keyframes fresh{0%{background:rgba(224,166,59,.22)}100%{background:transparent}}
-
-  /* Tonight */
   .shot{display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:var(--hair-soft); cursor:pointer; font-size:13px; color:var(--bone-dim)}
   .shot:last-child{border-bottom:none}
   .shot input{accent-color:var(--amber); width:15px; height:15px; flex:0 0 auto; cursor:pointer}
   .shot input:checked + span{color:var(--bone-faint); text-decoration:line-through}
   .kv{display:flex; justify-content:space-between; gap:14px; padding:7px 0; border-bottom:var(--hair-soft); font-size:13px}
   .kv:last-child{border-bottom:none}
-  .kv dt{color:var(--bone-faint); font-family:var(--mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase}
+  .kv dt{color:var(--bone-faint); font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase}
   .kv dd{margin:0; color:var(--bone); text-align:right; font-weight:500}
   dl{margin:0}
 
-  /* Approval cards */
-  .appr{border-left:3px solid var(--ash); background:var(--panel); padding:14px 16px; margin-bottom:10px}
-  .appr--flag{border-left-color:var(--red)}
-  .appr h4{font-family:var(--sans); font-size:14.5px; font-weight:600; margin:0 0 5px; color:var(--bone)}
-  .appr p{margin:0 0 11px; font-size:12.5px; color:var(--bone-dim); max-width:62ch}
-  .appr-acts{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
-  .btn{
-    font-family:var(--mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase;
-    padding:7px 13px; border:1px solid var(--ash); background:none; color:var(--bone-dim); cursor:pointer; transition:.14s;
-  }
-  .btn:hover{border-color:var(--clay); color:var(--bone)}
-  .btn--yes{border-color:rgba(130,180,92,.45); color:var(--sage)}
-  .btn--yes:hover{background:rgba(130,180,92,.12); border-color:var(--sage)}
-  .btn--no:hover{background:rgba(196,57,44,.1); border-color:var(--red); color:var(--red)}
-  .appr.done{opacity:.42}
-  .appr.done .appr-acts{display:none}
-  .resolved{font-family:var(--mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--sage)}
-  .resolved.no{color:var(--red)}
+  .setclock{display:flex; gap:2px; margin-top:12px}
+  .sc-seg{flex:1 1 0; min-width:0; background:var(--panel-2); border-top:2px solid var(--ash); padding:8px 7px 10px}
+  .sc-seg--show{border-top-color:var(--amber-deep)}
+  .sc-name{font-family:var(--display); font-weight:700; font-size:13px; text-transform:uppercase; color:var(--bone-dim); line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .sc-time{font-family:var(--mono); font-size:9px; color:var(--bone-faint); margin-top:4px}
 
-  /* Lead rows */
-  .lead{display:grid; grid-template-columns:1fr auto; gap:6px 16px; padding:13px 0 13px 13px; border-bottom:var(--hair-soft); border-left:3px solid transparent}
-  .lead--late{border-left-color:var(--red); background:rgba(196,57,44,.05)}
-  .lead--warn{border-left-color:var(--amber)}
-  .lead-n{color:var(--bone); font-weight:600; font-size:14px}
-  .lead-m{font-family:var(--mono); font-size:10.5px; color:var(--bone-faint); letter-spacing:.06em; margin-top:3px}
-  .lead-r{text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums}
-  .lead-v{font-size:15px; color:var(--bone)}
-  .lead-t{font-size:10.5px; letter-spacing:.09em; margin-top:3px; color:var(--bone-faint); text-transform:uppercase}
-  .lead--late .lead-t{color:var(--red)}
-  .lead--warn .lead-t{color:var(--amber)}
+  .warnbox{display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-left:3px solid var(--red); background:rgba(196,57,44,.08); font-size:13px; color:var(--bone-dim); margin-bottom:16px}
+  .warnbox b{color:var(--red)}
+  .okbox{border-left-color:var(--st-ok); background:rgba(79,168,130,.08)}
+  .okbox b{color:var(--st-ok)}
 
-  .note{
-    font-family:var(--mono); font-size:10.5px; color:var(--bone-faint);
-    letter-spacing:.04em; line-height:1.6; margin-top:14px; padding-top:12px; border-top:var(--hair-soft);
-  }
-  .thesis{
-    margin-top:34px; padding:22px 0 0; border-top:2px solid var(--ash);
-  }
-  .thesis p{
-    font-family:var(--display); font-weight:600; font-size:clamp(20px,3.4vw,30px);
-    line-height:1.14; text-transform:uppercase; letter-spacing:.01em;
-    color:var(--bone-dim); margin:0; max-width:22ch; text-wrap:balance;
-  }
+  .note{font-family:var(--mono); font-size:10.5px; color:var(--bone-faint); letter-spacing:.03em; line-height:1.6; margin-top:14px; padding-top:12px; border-top:var(--hair-soft)}
+  .note b{color:var(--bone-dim); font-weight:500}
+  .thesis{margin-top:34px; padding-top:22px; border-top:2px solid var(--ash)}
+  .thesis p{font-family:var(--display); font-weight:600; font-size:clamp(19px,3.2vw,28px); line-height:1.14; text-transform:uppercase; letter-spacing:.01em; color:var(--bone-dim); margin:0; max-width:26ch; text-wrap:balance}
   .thesis p em{font-style:normal; color:var(--amber)}
-  .colophon{margin-top:20px; font-family:var(--mono); font-size:10px; letter-spacing:.09em; color:var(--bone-faint); line-height:1.7; text-transform:uppercase}
+  .colophon{margin-top:20px; font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--bone-faint); line-height:1.7; text-transform:uppercase}
 
   :focus-visible{outline:2px solid var(--amber-bright); outline-offset:2px}
   @media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important}}
 
   @media (max-width:900px){
     .console{grid-template-columns:1fr; gap:18px}
-    nav.modules{
-      border-right:none; border-bottom:var(--hair); padding-right:0; padding-bottom:6px;
-      position:static; display:flex; gap:18px; overflow-x:auto;
-    }
+    nav.modules{border-right:none; border-bottom:var(--hair); padding-right:0; padding-bottom:6px; position:static; display:flex; gap:18px; overflow-x:auto}
     .mod-group{margin-bottom:8px; flex:0 0 auto}
-    .mod-group:last-child{display:none}
     .mod{white-space:nowrap; padding:6px 10px}
-    .rail-lay{grid-template-columns:1fr}
-    .phone{max-width:340px}
   }
   @media (max-width:620px){
     .g4,.g3,.g2{grid-template-columns:1fr}
-    .sc-track{overflow-x:auto}
-    .sc-seg{min-width:88px}
-    .bars,.xaxis,.barsarea{min-width:460px}
-    .plot{overflow-x:auto}
-    .nba{flex-direction:column; gap:7px}
-    .items{grid-template-columns:repeat(3,1fr)}
+    .setclock{overflow-x:auto}
+    .sc-seg{min-width:84px}
   }
 </style>
 
@@ -387,69 +249,177 @@
       <div class="brandsub">Handlebar J Revenue + Content OS <b>· The Backstage · Scottsdale, AZ</b></div>
     </div>
     <div class="mast-right">
-      <div class="venue-clock">7:12 PM</div>
-      <div class="venue-meta">Fri · Herndon Brothers · 88&deg;F clear · patio open</div>
       <span class="demo-badge">Demo data — not Handlebar J's figures</span>
+      <div class="acting">
+        Acting as <b>authorized marketing operator</b><br>
+        <i>Cannot</i> set staffing · pricing · capacity · Toast · cover · menu
+      </div>
     </div>
   </header>
 
-  <section class="setclock" aria-label="The Set Clock">
-    <div class="sc-head">
-      <span class="eyebrow eyebrow--amber">The Set Clock — tonight's spine</span>
-      <span class="sc-lockup">Locked by floor lead 4:55 PM · <b>confirmed with band</b></span>
-    </div>
-    <div class="sc-track">
-      <div class="sc-seg sc-seg--now"><div class="sc-name">Pre-show</div><div class="sc-time">5:00–7:30</div><div class="sc-nowtag">Now</div></div>
-      <div class="sc-seg sc-seg--show"><div class="sc-name">Set 1</div><div class="sc-time">7:30–8:25</div></div>
-      <div class="sc-seg"><div class="sc-name">Break 1</div><div class="sc-time">8:25–8:45</div></div>
-      <div class="sc-seg sc-seg--show"><div class="sc-name">Set 2</div><div class="sc-time">8:45–9:40</div></div>
-      <div class="sc-seg"><div class="sc-name">Break 2</div><div class="sc-time">9:40–10:00</div></div>
-      <div class="sc-seg sc-seg--show"><div class="sc-name">Set 3</div><div class="sc-time">10:00–11:40</div></div>
-      <div class="sc-seg"><div class="sc-name">Last call</div><div class="sc-time">11:40–12:30</div></div>
-    </div>
+  <section class="question">
+    <span class="eyebrow eyebrow--amber">The question this system answers</span>
+    <p>What kind of business does Handlebar J want more of — <em>and when?</em></p>
   </section>
-
-  <div class="nba">
-    <span class="nba-label">Next best action</span>
-    <div class="nba-body">
-      <p>Three private-event leads are past the 60-minute response SLA. Combined estimate <b>$31,600</b>. Call <b>Martinez</b> first — 120 guests, December 14, a date currently open.</p>
-      <div class="nba-why">Ranked on: value × date availability × hours since inquiry. One action, not twelve charts.</div>
-    </div>
-  </div>
 
   <div class="console">
 
     <nav class="modules" aria-label="Modules">
       <div class="mod-group">
         <span class="eyebrow">Live in this demo</span>
-        <button class="mod" data-go="tonight" aria-current="true">Tonight at the J</button>
-        <button class="mod" data-go="rail">The Rail</button>
+        <button class="mod" data-go="demand" aria-current="true">Demand Grid</button>
         <button class="mod" data-go="feria">Feria</button>
         <button class="mod" data-go="leads">Lead Desk</button>
+        <button class="mod" data-go="tonight">Tonight at the J</button>
         <button class="mod" data-go="approve">Approval Queue</button>
+        <button class="mod" data-go="rail">Rail Zero <span class="chip chip--opt">Opt</span></button>
       </div>
       <div class="mod-group">
-        <span class="eyebrow">Ships in the MVP</span>
-        <button class="mod" disabled>Content Vault <span class="chip chip--mvp">MVP</span></button>
-        <button class="mod" disabled>Weekly Brief <span class="chip chip--mvp">MVP</span></button>
+        <span class="eyebrow">Also in the MVP</span>
+        <button class="mod" disabled>Calendar Accuracy</button>
+        <button class="mod" disabled>Legacy Engine Lite</button>
       </div>
       <div class="mod-group">
-        <span class="eyebrow">Phase 2 — days 46–90</span>
-        <button class="mod" disabled>Campaign Builder <span class="chip">P2</span></button>
-        <button class="mod" disabled>Legacy Engine <span class="chip">P2</span></button>
-        <button class="mod" disabled>Community Network <span class="chip">P2</span></button>
-        <button class="mod" disabled>Competitor Watch <span class="chip">P2</span></button>
+        <span class="eyebrow">Phase 2</span>
+        <button class="mod" disabled>Community Network <span class="chip chip--p2">P2</span></button>
+        <button class="mod" disabled>Competitor Watch <span class="chip chip--p2">P2</span></button>
       </div>
     </nav>
 
     <main class="stage">
 
-      <!-- ── TONIGHT ─────────────────────────────── -->
-      <section class="panel" id="p-tonight">
+      <!-- ── DEMAND GRID ─────────────────────────── -->
+      <section class="panel" id="p-demand">
         <div class="panel-head">
-          <span class="eyebrow eyebrow--amber">Module 02</span>
+          <span class="eyebrow eyebrow--amber">MVP 1 — the center of the system</span>
+          <h2 class="panel-title">Demand Grid</h2>
+          <p class="panel-lede">Demand is not a property of the venue — it's a property of a day and a daypart. Friday 9pm and Tuesday 3pm are different businesses in the same building. Pick a cell to see what the system will and won't recommend for it.</p>
+        </div>
+
+        <div class="card">
+          <div class="gridhead">
+            <span class="eyebrow">Week of Sept 8 · states set by operations</span>
+            <div class="toggle" role="group" aria-label="Grid vintage">
+              <button id="v-week3" aria-pressed="true">After baseline</button>
+              <button id="v-day1" aria-pressed="false">Day 1, as installed</button>
+            </div>
+          </div>
+
+          <div class="dgwrap"><div class="dg" id="dg"></div></div>
+
+          <div class="legend">
+            <span class="lg lg-over"><i></i>Overloaded — protect</span>
+            <span class="lg lg-ok"><i></i>Healthy — yield, not volume</span>
+            <span class="lg lg-opp"><i></i>Opportunity — growth candidate</span>
+            <span class="lg lg-prot"><i></i>Protected — no promotion</span>
+            <span class="lg lg-unk"><i></i>Unknown — measure first</span>
+          </div>
+          <div class="note" id="gridnote"><b>Cells still reading Unknown are the honest state</b>, not a gap to paper over — the two signals that most reliably identify an overloaded night, turn-aways and staff strain, exist in no POS and no marketing tool. They need one person tapping a screen at the end of the night.</div>
+        </div>
+
+        <div class="card detail" id="detail"></div>
+      </section>
+
+      <!-- ── FERIA ───────────────────────────────── -->
+      <section class="panel" id="p-feria" hidden>
+        <div class="panel-head">
+          <span class="eyebrow eyebrow--amber">MVP 4</span>
+          <h2 class="panel-title">Feria</h2>
+          <p class="panel-lede">Total sales is a bad primary metric for a venue that sometimes can't seat everyone. A packed, strained, low-attach night and a comfortable, high-attach night post the same number.</p>
+        </div>
+
+        <div class="grid g4">
+          <div class="card"><span class="stat-k">Revenue per open hour</span><div class="stat-v">$1,640</div><div class="stat-n">The yield metric. Normalizes a 5-hour Tuesday against a 9-hour Friday.</div></div>
+          <div class="card"><span class="stat-k">Capacity-free revenue</span><div class="stat-v" style="color:var(--st-ok)">$5,990</div><div class="stat-n">Gift cards + merch + private events. Consumes no peak seat.</div></div>
+          <div class="card"><span class="stat-k">Guest complaints</span><div class="stat-v" style="color:var(--red)">11</div><div class="stat-n">Up from 4. All on Fri/Sat dinner. The earliest overload warning there is.</div></div>
+          <div class="card"><span class="stat-k">Staff strain, Fri/Sat</span><div class="stat-v" style="color:var(--red)">4.2<span style="font-size:15px">/5</span></div><div class="stat-n">MOD's end-of-night rating. 5 is worst.</div></div>
+        </div>
+
+        <div class="warnbox" style="margin-top:14px">
+          <b>Read this before celebrating.</b>
+          <span>Saturday posted its best revenue in eleven weeks — with complaints up 175% and staff strain at 4.2/5. On the old logic that is a win. On this logic it is a <b>failed night that made money</b>, and the recommendation for Saturday is protection, not promotion.</span>
+        </div>
+
+        <div class="card">
+          <span class="eyebrow">Scorecard — week of Sept 8</span>
+          <div class="tblwrap" style="margin-top:10px">
+            <table>
+              <thead><tr><th>Line</th><th style="text-align:right">This period</th><th style="text-align:right">Comparable</th><th style="text-align:right">&Delta;</th><th>Read</th></tr></thead>
+              <tbody>
+                <tr><td class="name">Revenue per open hour</td><td class="num">$1,640</td><td class="num">$1,510</td><td class="num" style="color:var(--st-ok)">+8.6%</td><td>Yield up</td></tr>
+                <tr><td class="name">Gift cards <span class="free">Capacity-free</span></td><td class="num">$2,150</td><td class="num">$1,720</td><td class="num" style="color:var(--st-ok)">+25%</td><td>Scale</td></tr>
+                <tr><td class="name">Merchandise <span class="free">Capacity-free</span></td><td class="num">$340</td><td class="num">$310</td><td class="num">+10%</td><td>Under-built</td></tr>
+                <tr><td class="name">Private-event deposits <span class="free">Capacity-free</span></td><td class="num">$3,500</td><td class="num">$0</td><td class="num" style="color:var(--st-ok)">new</td><td>The engine</td></tr>
+                <tr><td class="name">Avg check, Fri/Sat</td><td class="num">$41</td><td class="num">$37</td><td class="num" style="color:var(--st-ok)">+$4</td><td>Yield up</td></tr>
+                <tr><td class="name">Food attach, show nights</td><td class="num">54%</td><td class="num">61%</td><td class="num" style="color:var(--red)">&minus;7pt</td><td>Cover-only mix rising</td></tr>
+                <tr><td class="name">Tue–Wed revenue per open hour</td><td class="num">$610</td><td class="num">$640</td><td class="num" style="color:var(--red)">&minus;4.7%</td><td>The real opportunity</td></tr>
+                <tr><td class="name">Guest complaints</td><td class="num">11</td><td class="num">4</td><td class="num" style="color:var(--red)">+175%</td><td><b style="color:var(--red)">Protect</b></td></tr>
+                <tr><td class="name">Staff strain, Fri/Sat</td><td class="num">4.2/5</td><td class="num">3.1/5</td><td class="num" style="color:var(--red)">worse</td><td><b style="color:var(--red)">Protect</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="note"><b>Business mix is judged on commercial behavior only</b> — attach rate, spend per occupied hour, advance-commitment, repeat rate, channel margin. Never on any characteristic of guests as people. The schema carries no column that could hold one.</div>
+        </div>
+      </section>
+
+      <!-- ── LEAD DESK ───────────────────────────── -->
+      <section class="panel" id="p-leads" hidden>
+        <div class="panel-head">
+          <span class="eyebrow eyebrow--amber">MVP 6 — the capacity-free engine</span>
+          <h2 class="panel-title">Lead Desk</h2>
+          <p class="panel-lede">Private events on slow and dark days are the highest-margin revenue Handlebar J can add without touching a busy night. In v2 this desk is a <em>routing</em> tool: when a requested date is overloaded, it offers the dates the venue actually wants.</p>
+        </div>
+
+        <div class="grid g4">
+          <div class="card"><span class="stat-k">Qualified</span><div class="stat-v">7</div></div>
+          <div class="card"><span class="stat-k">Quoted</span><div class="stat-v">$52,000</div></div>
+          <div class="card"><span class="stat-k">Median first response</span><div class="stat-v">38<span style="font-size:15px"> min</span></div><div class="stat-n">Was 4h 30m</div></div>
+          <div class="card"><span class="stat-k">Routed to open dates</span><div class="stat-v" style="color:var(--st-ok)">3</div><div class="stat-n">The corrected mission, measured</div></div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <span class="eyebrow">Past SLA first — 60-minute target</span>
+          <div style="margin-top:8px">
+            <div class="lead lead--late">
+              <div><div class="lead-n">Martinez — corporate holiday party</div>
+                <div class="lead-m">120 guests · requested Sat Dec 14 · website form · evidence: form submission</div>
+                <div class="lead-route">Requested date is <b>OVERLOADED</b>. Offer Thu Dec 12 or Sun Dec 15 — both Opportunity, both full-buyout capable.</div></div>
+              <div class="lead-r"><div class="lead-v">$18,400</div><div class="lead-t">4h 12m past SLA</div></div>
+            </div>
+            <div class="lead lead--late">
+              <div><div class="lead-n">Vance Realty — client appreciation</div>
+                <div class="lead-m">60 guests · requested Fri Dec 5 · Instagram DM · evidence: DM thread</div>
+                <div class="lead-route">Requested date is <b>OVERLOADED</b>. Tue Dec 2 is open and the room is theirs alone.</div></div>
+              <div class="lead-r"><div class="lead-v">$9,200</div><div class="lead-t">1h 48m past SLA</div></div>
+            </div>
+            <div class="lead lead--warn">
+              <div><div class="lead-n">Chaparral booster banquet</div>
+                <div class="lead-m">90 guests · Mon Nov 2 · community partner · evidence: phone log</div>
+                <div class="lead-route">Requested date is <b>Opportunity</b> — no routing needed. Pricing decision sits with ops, not marketing.</div></div>
+              <div class="lead-r"><div class="lead-v">$4,000</div><div class="lead-t">22m — approaching</div></div>
+            </div>
+            <div class="lead">
+              <div><div class="lead-n">Rehearsal dinner — Tolleson</div>
+                <div class="lead-m">45 guests · Sun Oct 18 · walk-in · evidence: host-stand card</div>
+                <div class="lead-route">Requested daypart is <b>Unknown</b>. Confirm capacity with the GM before quoting.</div></div>
+              <div class="lead-r"><div class="lead-v">$3,100</div><div class="lead-t">6m — new</div></div>
+            </div>
+          </div>
+          <div class="note">Every record carries an <b>evidence</b> field. The "200-plus remembered inquiries" is a claim, not a dataset — and if it turns out to be real and unworked, the first two months of private-event revenue come from demand that already exists, with no promotion at all.</div>
+        </div>
+      </section>
+
+      <!-- ── TONIGHT ─────────────────────────────── -->
+      <section class="panel" id="p-tonight" hidden>
+        <div class="panel-head">
+          <span class="eyebrow eyebrow--amber">Event mode</span>
           <h2 class="panel-title">Tonight at the J</h2>
-          <p class="panel-lede">The night is the product. This screen makes sure nothing capturable is missed and the room's emotional peak converts into an order.</p>
+          <p class="panel-lede">Optimize one event without assuming the venue needs more traffic. Tonight is Friday — an Overloaded cell — so this screen is running in protection posture, not promotion.</p>
+        </div>
+
+        <div class="warnbox">
+          <b>Friday show is Overloaded.</b>
+          <span>No demand-generating action is available for tonight. The system's recommendations are wait communication, advance seats for future dates, gift cards, and legacy capture — the room is full and the stories are in it.</span>
         </div>
 
         <div class="grid g2">
@@ -458,194 +428,111 @@
             <dl style="margin-top:10px">
               <div class="kv"><dt>Band</dt><dd>The Herndon Brothers</dd></div>
               <div class="kv"><dt>Doors</dt><dd>5:00 PM</dd></div>
-              <div class="kv"><dt>Cover</dt><dd>$10 — rolls to tab credit</dd></div>
+              <div class="kv"><dt>Cover</dt><dd>$10 — set by ops</dd></div>
               <div class="kv"><dt>Dance lesson</dt><dd>7:00 PM · two-step</dd></div>
               <div class="kv"><dt>Advance seats</dt><dd>62 of 90</dd></div>
-              <div class="kv"><dt>Featured</dt><dd>Full rack + bunkhouse sides</dd></div>
-              <div class="kv"><dt>Armed offer</dt><dd><span class="pill p-test">Encore Board</span></dd></div>
+              <div class="kv"><dt>Kitchen pressure</dt><dd style="color:var(--red)">High — 4.2/5</dd></div>
+              <div class="kv"><dt>Staff pressure</dt><dd style="color:var(--red)">High — 4/5</dd></div>
             </dl>
-            <div class="note">Offer approved by Ray on Sept 2 · armed by floor lead for tonight only · expires at set end. The software never invents an offer and never sets a price.</div>
+            <div class="setclock">
+              <div class="sc-seg"><div class="sc-name">Doors</div><div class="sc-time">5:00</div></div>
+              <div class="sc-seg sc-seg--show"><div class="sc-name">Set 1</div><div class="sc-time">7:30</div></div>
+              <div class="sc-seg"><div class="sc-name">Break</div><div class="sc-time">8:25</div></div>
+              <div class="sc-seg sc-seg--show"><div class="sc-name">Set 2</div><div class="sc-time">8:45</div></div>
+              <div class="sc-seg"><div class="sc-name">Break</div><div class="sc-time">9:40</div></div>
+              <div class="sc-seg sc-seg--show"><div class="sc-name">Set 3</div><div class="sc-time">10:00</div></div>
+            </div>
+            <div class="note">The Set Clock is retained because kitchen and staff pressure are demand-state signals. It is not a promotion tool.</div>
           </div>
 
           <div class="card">
-            <span class="eyebrow">Shot list — 7 required</span>
+            <span class="eyebrow">Capture list — legacy priority</span>
             <div style="margin-top:10px">
-              <label class="shot"><input type="checkbox" id="s1" checked><span>Smoke off the pit — 6:40, golden hour</span></label>
-              <label class="shot"><input type="checkbox" id="s2" checked><span>Ray on the rail before doors</span></label>
-              <label class="shot"><input type="checkbox" id="s3"><span>Dance lesson, wide — 7:00</span></label>
-              <label class="shot"><input type="checkbox" id="s4"><span>Full rack plated, back booths</span></label>
+              <label class="shot"><input type="checkbox" id="s1" checked><span>Ray on the rail before doors</span></label>
+              <label class="shot"><input type="checkbox" id="s2" checked><span>Smoke off the pit — 6:40</span></label>
+              <label class="shot"><input type="checkbox" id="s3"><span>Herndon Brothers soundcheck — archival</span></label>
+              <label class="shot"><input type="checkbox" id="s4"><span>Regulars at the bar — permission first</span></label>
               <label class="shot"><input type="checkbox" id="s5"><span>Room from stage left, Set 1 opener</span></label>
-              <label class="shot"><input type="checkbox" id="s6"><span>Encore — hands up, wide</span></label>
-              <label class="shot"><input type="checkbox" id="s7"><span>After the show — band with regulars</span></label>
+              <label class="shot"><input type="checkbox" id="s6"><span>Interview: Ray, 45 min — <b style="color:var(--amber)">week one</b></span></label>
             </div>
-            <div class="note">Every asset lands in the Vault tagged to this event, with permission state set before it can ever be scheduled.</div>
-          </div>
-        </div>
-
-        <div class="grid g4" style="margin-top:14px">
-          <div class="card"><span class="stat-k">Rail tickets queued</span><div class="stat-v" id="t-queued">137</div><div class="stat-n">Across 7 segments, hours ahead</div></div>
-          <div class="card"><span class="stat-k">Peak segment load</span><div class="stat-v" id="t-peak">34</div><div class="stat-n">Capacity is 38 — under the line</div></div>
-          <div class="card"><span class="stat-k">Comp + void, last 4 Rail nights</span><div class="stat-v">2.1%</div><div class="stat-n">Baseline was 3.8%</div></div>
-          <div class="card"><span class="stat-k">Avg check, event nights</span><div class="stat-v">$41</div><div class="stat-n">+$4 vs. comparable</div></div>
-        </div>
-      </section>
-
-      <!-- ── THE RAIL ────────────────────────────── -->
-      <section class="panel" id="p-rail" hidden>
-        <div class="panel-head">
-          <span class="eyebrow eyebrow--amber">The new thing</span>
-          <h2 class="panel-title">The Rail — order by the song, not the seat</h2>
-          <p class="panel-lede">Every POS on earth models a venue as tables on a clock. Handlebar J is a room on a setlist. The Rail lets a guest choose <em>where in the show their food lands</em> — which hands the kitchen a known demand curve hours in advance instead of a wall of tickets at the break.</p>
-        </div>
-
-        <div class="rail-lay">
-
-          <div class="phone" aria-label="Guest ordering interface">
-            <div class="phone-top">
-              <span class="boottag">RED BOOT 4</span>
-              <span class="zonetag">Dance floor edge</span>
-            </div>
-            <h3 class="phone-q">When should it land?</h3>
-            <p class="phone-sub">92 dB and 8 lux. No reading, one thumb, haptic confirm. Production tiles carry photography, not type.</p>
-
-            <div class="items" role="group" aria-label="Pick an item">
-              <button class="item" data-item="Half rack + two sides" aria-pressed="false"><span class="iname">Half rack</span><span class="iprice">$26</span></button>
-              <button class="item" data-item="Brisket plate" aria-pressed="false"><span class="iname">Brisket</span><span class="iprice">$24</span></button>
-              <button class="item" data-item="Wings, hot" aria-pressed="false"><span class="iname">Wings</span><span class="iprice">$16</span></button>
-            </div>
-
-            <div class="win" role="group" aria-label="Pick a landing window">
-              <button class="winbtn" data-win="pre" aria-pressed="false"><span><b>Now</b><small>You're seated and hungry</small></span><span class="land">~7:34</span></button>
-              <button class="winbtn" data-win="brk1" aria-pressed="false"><span><b>At the break</b><small>90 sec into Break 1</small></span><span class="land">8:27</span></button>
-              <button class="winbtn" data-win="brk2" aria-pressed="false"><span><b>Second break</b><small>After Set 2</small></span><span class="land">9:42</span></button>
-              <button class="winbtn" data-win="last" aria-pressed="false"><span><b>Last call</b><small>Late-night board</small></span><span class="land">11:42</span></button>
-            </div>
-
-            <button class="send" id="send" disabled>Send to the Rail</button>
-            <div class="phone-note" id="send-note">Pick an item and a landing window. Nothing fires until you do — and the runner finds you by zone and boot tag, not table number, because you're going to be dancing.</div>
-          </div>
-
-          <div>
-            <div class="card">
-              <div class="chart-head">
-                <div>
-                  <h3 class="chart-title">Kitchen load by segment</h3>
-                  <p class="chart-sub">Tickets landing in each part of the night. The dashed line is what this kitchen can plate without ticket times blowing out.</p>
-                </div>
-                <div class="toggle" role="group" aria-label="Comparison">
-                  <button id="m-with" aria-pressed="true">With the Rail</button>
-                  <button id="m-without" aria-pressed="false">Without</button>
-                </div>
-              </div>
-
-              <div class="plot">
-                <div class="barsarea">
-                  <div class="overzone" id="overzone"><span>Over capacity — ticket times blow out</span></div>
-                  <div class="cap-line" id="capline"><span class="cap-label">Kitchen capacity — 38</span></div>
-                  <div class="bars" id="bars"></div>
-                </div>
-                <div class="xaxis" id="xaxis"></div>
-              </div>
-
-              <div class="overwarn ok" id="warn">
-                <b>Smoothed.</b>
-                <span id="warntext">Peak load is 34 against a capacity of 38. Every segment sits under the line, and expo saw the 8:25 build at 7:40 — with time to fire ahead of it.</span>
-              </div>
-            </div>
-
-            <div class="card queue" style="margin-top:14px">
-              <span class="eyebrow">Live Rail queue — sequenced, not first-come</span>
-              <div id="queue" style="margin-top:10px"></div>
-            </div>
-
-            <div class="grid g3" style="margin-top:14px">
-              <div class="card"><span class="stat-k">Boot Tag</span><div class="stat-v" style="font-size:22px">Tab follows the person</div><div class="stat-n">Not the table. Runners work zone + call sign, so a guest on the dance floor is still a guest with an open tab.</div></div>
-              <div class="card"><span class="stat-k">Cover → credit</span><div class="stat-v" style="font-size:22px">$10 becomes spend</div><div class="stat-n">The single highest-leverage average-check mechanic here: it turns a sunk cost into a spending trigger.</div></div>
-              <div class="card"><span class="stat-k">Pilot cost</span><div class="stat-v" style="font-size:22px">A QR code</div><div class="stat-n">The Rail Zero runs on a static page and one expo tablet. No Toast API, no integration, one weekend.</div></div>
-            </div>
-
-            <div class="note">Every figure on this screen is illustrative. The Rail's six mechanics are hypotheses with named tests — see §6.7 of the blueprint. Nothing here has been measured at Handlebar J yet.</div>
+            <div class="note">Legacy capture is one of the few always-permitted actions on an Overloaded night. Archival memory is perishable — the people who hold these stories will not always be available to tell them.</div>
           </div>
         </div>
       </section>
 
-      <!-- ── FERIA ───────────────────────────────── -->
-      <section class="panel" id="p-feria" hidden>
-        <div class="panel-head">
-          <span class="eyebrow eyebrow--amber">Module 03</span>
-          <h2 class="panel-title">Feria</h2>
-          <p class="panel-lede">What made money — and, just as importantly, whose it was. The four attribution buckets are shown separately and are never summed into one hero number.</p>
-        </div>
-
-        <div class="grid g4">
-          <div class="card"><span class="stat-k">1 · Already happening</span><div class="stat-v">$41,200</div><div class="stat-n">Baseline. Never Emily's to claim.</div></div>
-          <div class="card"><span class="stat-k">2 · Influenced</span><div class="stat-v" style="color:var(--amber)">$6,840</div><div class="stat-n">Claimable only with the comparison shown.</div></div>
-          <div class="card"><span class="stat-k">3 · Attributed</span><div class="stat-v" style="color:var(--sage)">$2,470</div><div class="stat-n">Carries a tracking code. The only unqualified claim.</div></div>
-          <div class="card"><span class="stat-k">4 · Pipeline</span><div class="stat-v" style="color:var(--blue)">$52,000</div><div class="stat-n">A forecast, labeled as one.</div></div>
-        </div>
-
-        <div class="card" style="margin-top:14px">
-          <span class="eyebrow">Feria scorecard — week of Sept 8</span>
-          <div class="tblwrap" style="margin-top:10px">
-            <table>
-              <thead><tr><th>Line</th><th style="text-align:right">This period</th><th style="text-align:right">Comparable</th><th style="text-align:right">&Delta;</th><th>Status</th></tr></thead>
-              <tbody>
-                <tr><td class="name">Saturday show revenue</td><td class="num">$14,200</td><td class="num">$11,640</td><td class="num" style="color:var(--sage)">+22%</td><td><span class="pill p-scale">Scale</span></td></tr>
-                <tr><td class="name">Average check, event nights</td><td class="num">$41</td><td class="num">$37</td><td class="num" style="color:var(--sage)">+$4</td><td><span class="pill p-scale">Scale</span></td></tr>
-                <tr><td class="name">Ribs, featured nights</td><td class="num">2.1&times;</td><td class="num">—</td><td class="num">—</td><td><span class="pill p-scale">Scale</span></td></tr>
-                <tr><td class="name">Encore Board (attributed)</td><td class="num">$1,088</td><td class="num">—</td><td class="num">new</td><td><span class="pill p-test">Test</span></td></tr>
-                <tr><td class="name">Comp + void %, Rail nights</td><td class="num">2.1%</td><td class="num">3.8%</td><td class="num" style="color:var(--sage)">&minus;1.7pt</td><td><span class="pill p-scale">Scale</span></td></tr>
-                <tr><td class="name">Gift cards</td><td class="num">$2,150</td><td class="num">$1,720</td><td class="num" style="color:var(--amber)">+25%</td><td><span class="pill p-improve">Improve</span></td></tr>
-                <tr><td class="name">Merch</td><td class="num">$340</td><td class="num">$310</td><td class="num">+10%</td><td><span class="pill p-hold">Hold</span></td></tr>
-                <tr><td class="name">Wednesday dance lesson</td><td class="num">4 res.</td><td class="num">threshold 15</td><td class="num" style="color:var(--red)">&minus;73%</td><td><span class="pill p-kill">Kill</span></td></tr>
-                <tr><td class="name">Private-event deposits</td><td class="num">$6,400</td><td class="num">$0</td><td class="num" style="color:var(--sage)">new</td><td><span class="pill p-scale">Scale</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="note">Every campaign is created with its kill threshold already written down. The Wednesday dance lesson is not a disappointment — it is a test that returned a clear answer, on schedule, for a known cost.</div>
-        </div>
-      </section>
-
-      <!-- ── LEAD DESK ───────────────────────────── -->
-      <section class="panel" id="p-leads" hidden>
-        <div class="panel-head">
-          <span class="eyebrow eyebrow--amber">Module 05</span>
-          <h2 class="panel-title">Lead Desk</h2>
-          <p class="panel-lede">The highest-leverage screen in the app: four to six additional private events a month is the entire break-even on the fee. It opens on the leads that are <em>rotting</em>, not the ones that are new.</p>
-        </div>
-
-        <div class="grid g4">
-          <div class="card"><span class="stat-k">Qualified</span><div class="stat-v">7</div></div>
-          <div class="card"><span class="stat-k">Quoted</span><div class="stat-v">$52,000</div></div>
-          <div class="card"><span class="stat-k">Deposits</span><div class="stat-v" style="color:var(--sage)">$6,400</div></div>
-          <div class="card"><span class="stat-k">Median first response</span><div class="stat-v">38<span style="font-size:16px"> min</span></div><div class="stat-n">Was 4h 30m</div></div>
-        </div>
-
-        <div class="card" style="margin-top:14px">
-          <span class="eyebrow">Past SLA first — 60-minute target</span>
-          <div style="margin-top:8px">
-            <div class="lead lead--late"><div><div class="lead-n">Martinez — corporate holiday party</div><div class="lead-m">120 guests · Dec 14 · website form · date open · evidence: form submission</div></div><div class="lead-r"><div class="lead-v">$18,400</div><div class="lead-t">4h 12m past SLA</div></div></div>
-            <div class="lead lead--late"><div><div class="lead-n">Vance Realty — client appreciation</div><div class="lead-m">60 guests · Dec 5 · Instagram DM · date open · evidence: DM thread</div></div><div class="lead-r"><div class="lead-v">$9,200</div><div class="lead-t">1h 48m past SLA</div></div></div>
-            <div class="lead lead--warn"><div><div class="lead-n">Chaparral booster banquet</div><div class="lead-m">90 guests · Nov 2 · community partner · needs Ray on pricing · evidence: phone log</div></div><div class="lead-r"><div class="lead-v">$4,000</div><div class="lead-t">22m — approaching</div></div></div>
-            <div class="lead"><div><div class="lead-n">Rehearsal dinner — Tolleson</div><div class="lead-m">45 guests · Oct 18 · walk-in · evidence: host-stand card</div></div><div class="lead-r"><div class="lead-v">$3,100</div><div class="lead-t">6m — new</div></div></div>
-          </div>
-          <div class="note">Every record carries an <b>evidence</b> field. The "200-plus remembered inquiries" is a claim, not a dataset — and after this system exists, that difference can never be lost again.</div>
-        </div>
-      </section>
-
-      <!-- ── APPROVAL ────────────────────────────── -->
+      <!-- ── APPROVALS ───────────────────────────── -->
       <section class="panel" id="p-approve" hidden>
         <div class="panel-head">
-          <span class="eyebrow eyebrow--amber">Module 09</span>
+          <span class="eyebrow eyebrow--amber">Cross-cutting — and what makes this handoff-ready</span>
           <h2 class="panel-title">Approval Queue</h2>
-          <p class="panel-lede">Ray's view, at thumb scale. If clearing an item takes more than 15 seconds it will not happen, and the whole governance model collapses with it. Every decision is written to an append-only audit log.</p>
+          <p class="panel-lede">Ray may hire a GM or a management company. Every item carries an impact classification and routes to whoever holds that authority — so marketing can never quietly steer the restaurant, and the system survives a handoff without a rebuild.</p>
         </div>
 
         <div id="apprlist">
-          <div class="appr" data-a><h4>Encore Board — Herndon Brothers nights through October</h4><p>Half rack + two drinks, $32, fires when the encore starts, 20-minute expiry. Pre-set price. Arms per night; never auto-renews.</p><div class="appr-acts"><button class="btn btn--yes">Approve</button><button class="btn btn--no">Reject</button><button class="btn">Ask Emily</button></div></div>
-          <div class="appr" data-a><h4>Reel — "40 Years on This Stage"</h4><p>Archival photograph, 1986. Permission confirmed and on file. Scheduled Thursday 6:00 PM, links to the events calendar.</p><div class="appr-acts"><button class="btn btn--yes">Approve</button><button class="btn btn--no">Reject</button><button class="btn">Ask Emily</button></div></div>
-          <div class="appr appr--flag" data-a><h4>Memorial clip — <span style="color:var(--red)">restricted</span></h4><p>The system has blocked this from scheduling. Sensitive content requires explicit written permission from the family, every time, with no "remember this choice." It cannot be attached to a post until that permission is on file.</p><div class="appr-acts"><button class="btn btn--no">Keep blocked</button><button class="btn">Request permission</button></div></div>
-          <div class="appr" data-a><h4>Chaparral fundraiser night — concept</h4><p>Booster club partnership, one Tuesday in November. Blocks a three-week promotion runway; a decision is needed by Friday.</p><div class="appr-acts"><button class="btn btn--yes">Approve</button><button class="btn btn--no">Reject</button><button class="btn">Ask Emily</button></div></div>
+          <div class="appr">
+            <h4>Shift the Wednesday promotion budget to Tuesday dinner</h4>
+            <p>Tuesday dinner is Opportunity; Wednesday show is Healthy. Routing spend to the emptier cell. No operational change requested.</p>
+            <div class="impact"><span class="im im--app">Approver: marketing operator</span><span class="im im--do">Do now</span></div>
+            <div class="appr-acts"><button class="btn btn--yes">Approve</button><button class="btn btn--no">Reject</button></div>
+          </div>
+          <div class="appr">
+            <h4>Happy hour, Tue–Thu 3–5pm</h4>
+            <p>Would move three Opportunity cells into Growth mode. <b>This is not a marketing decision.</b> It sets pricing, requires a staffing change, and alters guest expectations — so it routes to operational authority as a recommendation, never an action.</p>
+            <div class="impact"><span class="im im--app">Approver: Ray / GM</span><span class="im im--hot">Affects pricing</span><span class="im im--hot">Affects staffing</span><span class="im im--hot">Affects operations</span><span class="im">Disposition: test</span></div>
+            <div class="appr-acts"><button class="btn btn--yes">Approve</button><button class="btn btn--no">Reject</button><button class="btn">Defer to GM</button></div>
+          </div>
+          <div class="appr appr--flag">
+            <h4>Sunday memorial — <span style="color:var(--st-prot)">Protected</span></h4>
+            <p>The system has disabled all marketing automation for this cell. No scheduling, no amplification, no bulk anything. Each content action requires explicit per-item approval from the family, every time, with no "remember this choice."</p>
+            <div class="impact"><span class="im im--app">Approver: family + Ray</span><span class="im im--hot">Affects guest experience</span><span class="im">Automation disabled</span></div>
+            <div class="appr-acts"><button class="btn btn--no">Keep protected</button></div>
+          </div>
+          <div class="appr">
+            <h4>Rail Zero pilot — one event</h4>
+            <p>Requests management approval to run the timing-window experiment on a single event. No Toast integration, no cover credit, no automated offers, staff can disable it from the floor at any time.</p>
+            <div class="impact"><span class="im im--app">Approver: Ray / Joanne / GM</span><span class="im im--hot">Affects operations</span><span class="im im--hot">Affects guest experience</span><span class="im">Disposition: test</span></div>
+            <div class="appr-acts"><button class="btn btn--yes">Approve pilot</button><button class="btn btn--no">Decline</button><button class="btn">Defer</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── RAIL ZERO ───────────────────────────── -->
+      <section class="panel" id="p-rail" hidden>
+        <div class="panel-head">
+          <span class="eyebrow eyebrow--amber">Optional experiment — not approved, not scheduled</span>
+          <h2 class="panel-title">Rail Zero</h2>
+          <p class="panel-lede">In v1 of this blueprint The Rail was the centerpiece and was described as improving table turnover. That was wrong: Handlebar J may not want faster turns, because people staying <em>is</em> the product. It is now one narrow experiment, and it has to earn its way in.</p>
+        </div>
+
+        <div class="warnbox">
+          <b>Status: awaiting management approval.</b>
+          <span>Nothing on this screen runs until Ray, Joanne, a GM, or a management company approves it — and it runs on exactly one event when they do.</span>
+        </div>
+
+        <div class="grid g2">
+          <div class="card">
+            <span class="eyebrow">The one hypothesis it may test</span>
+            <p style="margin:10px 0 0; font-size:14.5px; max-width:52ch">That letting a guest request a timing window — <b>Now · Next break · Second break · Last call</b> — reduces the kitchen surge when the band stops, <b>without harming the guest experience.</b></p>
+            <div class="note"><b>It may not claim</b> faster service, better table turns, higher throughput, or an improved guest experience. Those are unproven or contrary to what the venue wants.</div>
+          </div>
+          <div class="card">
+            <span class="eyebrow">Pilot constraints — all mandatory</span>
+            <dl style="margin-top:10px">
+              <div class="kv"><dt>Approval</dt><dd>Required, management</dd></div>
+              <div class="kv"><dt>Scope</dt><dd>One event only</dd></div>
+              <div class="kv"><dt>Toast</dt><dd>No integration</dd></div>
+              <div class="kv"><dt>Cover credit</dt><dd>None</dd></div>
+              <div class="kv"><dt>Song-triggered offers</dt><dd>None</dd></div>
+              <div class="kv"><dt>Speed promises</dt><dd>None, anywhere</dd></div>
+              <div class="kv"><dt>Staff kill switch</dt><dd style="color:var(--st-ok)">From the floor, instant</dd></div>
+            </dl>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <span class="eyebrow">Deferred until a pilot proves guest <em>and</em> staff adoption</span>
+          <p style="margin:10px 0 0; color:var(--bone-dim); max-width:64ch">Boot Tag · cover-to-tab credit · song-triggered offers · The Round · zone routing · any Toast API work. These were v1's most interesting ideas. All of them are downstream of a question nobody has asked yet.</p>
+          <div class="note"><b>Success is not "guests used it."</b> Success is that expo and the floor lead said the night was easier and no guest experience got worse. If guests love it and the kitchen hates it, the pilot failed — and the debrief form makes "this made the night harder" exactly as easy to record as "this helped."</div>
         </div>
       </section>
 
@@ -653,11 +540,11 @@
   </div>
 
   <div class="thesis">
-    <p>Toast says what happened. Grok watches the market. J Command says what to do next. <em>The Rail changes what happens.</em></p>
+    <p>Anyone can build a dashboard that says post more. <em>This one's first job is to refuse.</em></p>
     <div class="colophon">
       Working Class Marketing · Handlebar J BBQ Restaurant &amp; Bar, 7116 E Becker Lane, Scottsdale AZ<br>
       All figures illustrative. Nothing here is validated against Handlebar J's operational data.<br>
-      Full blueprint: docs/J-COMMAND-BLUEPRINT.md
+      Full blueprint: docs/J-COMMAND-BLUEPRINT.md — v2, capacity-aware revision
     </div>
   </div>
 </div>
@@ -666,173 +553,218 @@
 (function(){
   "use strict";
 
-  // Segment data. `withRail` is tonight's sequenced curve; `without` is the same
-  // demand arriving unmanaged — everyone ordering the moment the band stops.
-  var SEG = [
-    {id:"pre",  name:"Pre-show",  time:"5:00–7:30",   withRail:34, without:18},
-    {id:"set1", name:"Set 1",     time:"7:30–8:25",   withRail:12, without:9},
-    {id:"brk1", name:"Break 1",   time:"8:25–8:45",   withRail:31, without:62},
-    {id:"set2", name:"Set 2",     time:"8:45–9:40",   withRail:10, without:7},
-    {id:"brk2", name:"Break 2",   time:"9:40–10:00",  withRail:27, without:44},
-    {id:"set3", name:"Set 3",     time:"10:00–11:40", withRail:9,  without:6},
-    {id:"last", name:"Last call", time:"11:40–12:30", withRail:14, without:9}
-  ];
-  var CAPACITY = 38;
-  var SCALE_MAX = 68;          // headroom so the 62 bar and its label both fit
-  var PLOT_H = 210;
-
-  var WINLABEL = {pre:"Now", brk1:"At the break", brk2:"Second break", last:"Last call"};
-
-  var queue = [
-    {tag:"RED BOOT 4",  item:"Half rack + two sides", zone:"Dance floor edge", win:"brk1"},
-    {tag:"TWO-STEP 9",  item:"Brisket plate",         zone:"Back booths",      win:"brk1"},
-    {tag:"MESQUITE 2",  item:"Wings, hot",            zone:"The rail",         win:"pre"},
-    {tag:"BECKER 7",    item:"Full rack, family",     zone:"Patio",            win:"brk2"},
-    {tag:"STETSON 1",   item:"Burnt ends",            zone:"Stage left",       win:"last"}
+  var DAYS  = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  var PARTS = [
+    {id:"lunch", name:"Lunch",     hours:"11–3"},
+    {id:"aft",   name:"Afternoon", hours:"3–5"},
+    {id:"din",   name:"Dinner",    hours:"5–8"},
+    {id:"show",  name:"Show",      hours:"8–close"}
   ];
 
-  var mode = "with";
-  var pickedItem = null, pickedWin = null;
+  var MODESHORT = {INSTITUTION:"inst", GROWTH:"growth", EVENT:"event", PROTECTED:"protected"};
 
-  var $ = function(s){ return document.querySelector(s); };
-  var barsEl = $("#bars"), xaxisEl = $("#xaxis"), queueEl = $("#queue");
+  var S = {
+    OVER:{code:"OVER", label:"Overloaded",  cls:"c-over", pill:"sp-over"},
+    OK:  {code:"OK",   label:"Healthy",     cls:"c-ok",   pill:"sp-ok"},
+    OPP: {code:"OPP",  label:"Opportunity", cls:"c-opp",  pill:"sp-opp"},
+    PROT:{code:"PROT", label:"Protected",   cls:"c-prot", pill:"sp-prot"},
+    UNK: {code:"—",    label:"Unknown",     cls:"c-unk",  pill:"sp-unk"}
+  };
 
-  // ── Chart ────────────────────────────────────────────
-  function val(s){ return mode === "with" ? s.withRail : s.without; }
+  // state, mode, and the evidence behind the state. Illustrative throughout.
+  var WEEK3 = {
+    "Mon:lunch":["UNK","INSTITUTION"], "Mon:aft":["OPP","INSTITUTION"], "Mon:din":["OPP","INSTITUTION"], "Mon:show":["OPP","INSTITUTION"],
+    "Tue:lunch":["UNK","INSTITUTION"], "Tue:aft":["OPP","INSTITUTION"], "Tue:din":["OPP","INSTITUTION"], "Tue:show":["OPP","INSTITUTION"],
+    "Wed:lunch":["UNK","INSTITUTION"], "Wed:aft":["OPP","INSTITUTION"], "Wed:din":["OK","INSTITUTION"],  "Wed:show":["OK","INSTITUTION"],
+    "Thu:lunch":["UNK","INSTITUTION"], "Thu:aft":["OK","INSTITUTION"],  "Thu:din":["OK","INSTITUTION"],  "Thu:show":["OK","INSTITUTION"],
+    "Fri:lunch":["OK","INSTITUTION"],  "Fri:aft":["OK","INSTITUTION"],  "Fri:din":["OVER","INSTITUTION"],"Fri:show":["OVER","EVENT"],
+    "Sat:lunch":["OK","INSTITUTION"],  "Sat:aft":["OK","INSTITUTION"],  "Sat:din":["OVER","INSTITUTION"],"Sat:show":["OVER","EVENT"],
+    "Sun:lunch":["UNK","INSTITUTION"], "Sun:aft":["PROT","PROTECTED"],  "Sun:din":["UNK","INSTITUTION"], "Sun:show":["UNK","INSTITUTION"]
+  };
 
-  function buildAxis(){
-    xaxisEl.innerHTML = SEG.map(function(s){
-      return '<div class="xcol"><div class="xname">' + s.name + '</div><div class="xtime">' + s.time + '</div></div>';
-    }).join("");
-  }
+  var EVID = {
+    OVER:[["Covers vs. comfortable capacity","112%"],["Kitchen ticket pressure","4.2/5"],["Staff strain (MOD)","4/5"],["Complaints, last 4 wks","9"],["Turn-aways logged","yes"]],
+    OK:  [["Covers vs. comfortable capacity","84%"],["Kitchen ticket pressure","2.1/5"],["Staff strain (MOD)","2/5"],["Complaints, last 4 wks","1"],["Turn-aways logged","none"]],
+    OPP: [["Covers vs. comfortable capacity","38%"],["Kitchen ticket pressure","1.2/5"],["Staff strain (MOD)","1/5"],["Revenue per open hour","$610"],["Unused capacity","real"]],
+    PROT:[["Occasion","Memorial service"],["Automation","disabled"],["Permission","family-held"]],
+    UNK: [["Covers vs. comfortable capacity","not measured"],["Kitchen ticket pressure","not measured"],["Staff strain (MOD)","not logged"],["Turn-aways","not logged"]]
+  };
 
-  function buildBars(){
-    barsEl.innerHTML = SEG.map(function(s){
-      return '<div class="barcol" id="col-' + s.id + '" title="">' +
-               '<div class="barval">0</div><div class="bar" style="height:0px"></div>' +
-             '</div>';
-    }).join("");
-  }
+  var state = JSON.parse(JSON.stringify(WEEK3));
+  var vintage = "week3";
+  var sel = "Fri:show";
 
-  function draw(pulseId){
-    var peak = 0;
-    SEG.forEach(function(s){
-      var v = val(s);
-      if (v > peak) peak = v;
-      var col = document.getElementById("col-" + s.id);
-      var h = Math.max(3, Math.round(v / SCALE_MAX * PLOT_H));
-      col.querySelector(".barval").innerHTML = "<b>" + v + "</b>";
-      col.querySelector(".bar").style.height = h + "px";
-      col.classList.toggle("over", v > CAPACITY);
-      col.title = s.name + " · " + s.time + " — " + v + " tickets landing" +
-                  (v > CAPACITY ? " · " + (v - CAPACITY) + " over capacity" : " · under capacity");
-      if (pulseId === s.id){
-        col.classList.add("pop");
-        setTimeout(function(){ col.classList.remove("pop"); }, 700);
+  function key(d,p){ return d + ":" + p; }
+  function cur(k){ return vintage === "day1" ? ["UNK","INSTITUTION"] : state[k]; }
+
+  // ── The suppression engine ──────────────────────────
+  // Recommendations are generated per class, then filtered by demand state.
+  // State always beats mode: a Growth-mode cell that is Overloaded still
+  // blocks demand generation.
+  function recsFor(k){
+    var d = k.split(":")[0], pid = k.split(":")[1];
+    var part = PARTS.filter(function(p){ return p.id === pid; })[0];
+    var when = d + " " + part.name.toLowerCase();
+    var st = cur(k)[0], mode = cur(k)[1];
+    var allow = [], block = [];
+
+    function A(cls, text, impact, pri){ allow.push({cls:cls, text:text, impact:impact, pri:!!pri}); }
+    function B(cls, text, reason){ block.push({cls:cls, text:text, reason:reason}); }
+
+    if (st === "OVER"){
+      A("Experience","Publish honest wait expectations for " + when + " before people leave the house. Complaints on this cell are up 175%.",["Approver: marketing operator","Do now"],true);
+      A("Routing","Route private-event inquiries asking for " + d + " to Tue or Wed, which have real unused capacity.",["Approver: marketing operator","Do now"],true);
+      A("Capacity-free","Offer gift cards to the people who couldn't get a table — revenue that needs no seat, redeemed on a day they pick.",["Approver: marketing operator"]);
+      A("Yield","Open advance seats for future " + d + "s. This doesn't add covers — it smooths the walk-up crush and reduces no-shows.",["Approver: Ray / GM","Affects operations","Disposition: test"]);
+      A("Asset","Capture legacy content. The room is full and the stories are in it — and this is always permitted here.",["Approver: marketing operator","Do now"]);
+      A("Experience","Flag to operations: staff strain 4/5 on this cell for three consecutive weeks.",["Approver: GM","Affects staffing","Recommendation only"]);
+      B("Demand-gen","Promote " + when + " to grow attendance","Demand state is OVERLOADED — the system cannot generate this");
+      B("Demand-gen","Run paid reach against the " + d + " show","Adds demand to a period already beyond comfortable capacity");
+      B("Demand-gen","Offer a discount to fill " + when,"There is nothing to fill");
+      B("Yield","Tableside upsell program","Lengthens service on a strained night — friction-free yield only");
+      if (mode === "GROWTH") B("Demand-gen","Growth-mode promotion of " + when,"State beats mode. Growth cannot override an Overloaded cell.");
+    }
+    else if (st === "OK"){
+      A("Yield","Feature a high-attach item on " + when + ". Food attach here is 54% and was 61% — the mix is drifting to cover-only.",["Approver: marketing operator","Do now"],true);
+      A("Yield","Open advance seats. Same covers, more committed, fewer no-shows.",["Approver: Ray / GM","Affects operations"],true);
+      A("Capacity-free","Gift card and merchandise placement — no seat consumed.",["Approver: marketing operator"]);
+      A("Experience","Keep hours, band listing and cover accurate everywhere. Wrong information is a silent leak.",["Approver: marketing operator","Do now"]);
+      A("Asset","Legacy capture and community relationship work.",["Approver: marketing operator"]);
+      B("Demand-gen","Auto-recommend promotion of " + when,"Healthy is full and running well — volume is an operator judgment call here, not a system recommendation");
+    }
+    else if (st === "OPP"){
+      if (mode === "GROWTH"){
+        A("Demand-gen","Promote " + when + " — leadership has put this window in Growth mode. Build the campaign with a named kill threshold.",["Approver: Ray / GM","Affects operations","Disposition: test"],true);
+        A("Demand-gen","Paid reach on " + when + ", capped, with a tracking code so attribution is real.",["Approver: Ray / GM","Affects operations"],true);
+      } else {
+        B("Demand-gen","Promote " + when + " to grow attendance","Real capacity exists — but Growth mode is not set on this cell. This needs a leadership decision, not a marketing one.");
+        B("Demand-gen","Launch a happy hour for " + when,"Sets pricing and requires staffing. Routes to operational authority as a recommendation.");
       }
+      A("Capacity-free","Book a private event into " + when + ". Highest contribution margin available, and it consumes capacity that is otherwise idle.",["Approver: Ray / GM","Do now"],true);
+      A("Routing","Offer this cell to inquiries whose requested date lands on an Overloaded night.",["Approver: marketing operator","Do now"],true);
+      A("Yield","Revenue per open hour here is $610 against $1,640 on show nights. Yield work has room.",["Approver: marketing operator"]);
+      A("Asset","Community and partner programming is a natural fit for an empty room.",["Approver: marketing operator"]);
+    }
+    else if (st === "PROT"){
+      A("Experience","Ensure accurate, respectful information only: time, place, parking. Nothing else.",["Approver: family + Ray","Affects guest experience"],true);
+      A("Measurement","Record the closure or reduced service so the baseline isn't corrupted by a non-commercial day.",["Approver: marketing operator"]);
+      A("Asset","Archival capture ONLY if the family explicitly requests it, handled separately and never promotionally.",["Approver: family + Ray","Per-item approval"]);
+      B("Demand-gen","Any promotion of " + when,"PROTECTED — all marketing automation is disabled for this cell");
+      B("Capacity-free","Gift card or merchandise placement","Not on a memorial. No commercial overlay of any kind.");
+      B("Routing","Route inquiries to this date","Protected occasions are not inventory");
+      B("Yield","Featured item or attach work","Protected");
+    }
+    else {
+      A("Measurement","Establish this cell: log covers, turn-aways and staff strain for two weeks. Twenty seconds a night.",["Approver: GM","Affects operations","Do now"],true);
+      A("Measurement","Confirm comfortable capacity for " + when + " with operations — a number nobody has written down.",["Approver: Ray / GM","Do now"],true);
+      A("Experience","Verify the posted hours for " + when + " are correct on the site, Google and social.",["Approver: marketing operator","Do now"]);
+      A("Capacity-free","Gift cards and merchandise are safe here — they consume no capacity whether or not the cell turns out to be busy.",["Approver: marketing operator"]);
+      B("Demand-gen","Promote " + when,"Demand state is UNKNOWN. Absence of evidence is not permission — measure first.");
+    }
+    return {allow:allow, block:block, st:st, mode:mode, when:d + " · " + part.name + " " + part.hours};
+  }
+
+  // ── Render ──────────────────────────────────────────
+  function drawGrid(){
+    var h = '<div class="dg-corner"></div>';
+    DAYS.forEach(function(d){ h += '<div class="dg-day">' + d + '</div>'; });
+    PARTS.forEach(function(p){
+      h += '<div class="dg-part"><b>' + p.name + '</b>' + p.hours + '</div>';
+      DAYS.forEach(function(d){
+        var k = key(d,p.id), c = cur(k), s = S[c[0]];
+        h += '<button class="cell ' + s.cls + '" data-k="' + k + '" aria-pressed="' + (k===sel) + '"' +
+             ' title="' + d + ' ' + p.name + ' — ' + s.label + '">' +
+             '<span class="code">' + s.code + '</span>' +
+             (c[1] === "INSTITUTION" ? "" : '<span class="cv">' + MODESHORT[c[1]] + '</span>') +
+             '</button>';
+      });
+    });
+    document.getElementById("dg").innerHTML = h;
+    document.querySelectorAll(".cell").forEach(function(b){
+      b.addEventListener("click", function(){ sel = b.dataset.k; drawGrid(); drawDetail(); });
     });
 
-    // Capacity reference line, positioned on the same scale as the bars.
-    var capY = Math.round(CAPACITY / SCALE_MAX * PLOT_H);
-    $("#capline").style.bottom = capY + "px";
-    $("#overzone").style.height = (PLOT_H - capY) + "px";
+    var unknown = 0;
+    DAYS.forEach(function(d){ PARTS.forEach(function(p){ if (cur(key(d,p.id))[0] === "UNK") unknown++; }); });
+    document.getElementById("gridnote").innerHTML = vintage === "day1"
+      ? '<b>This is the honest first screen.</b> On installation day every cell reads Unknown, because nothing has been measured yet. A system that opens on confident colors it has not earned is lying to the operator on first impression — so it doesn\'t.'
+      : '<b>' + unknown + ' cells still read Unknown.</b> That is the honest state, not a gap to paper over — the two signals that most reliably identify an overloaded night, turn-aways and staff strain, exist in no POS and no marketing tool. They need one person tapping a screen at the end of the night.';
+  }
 
-    var over = SEG.filter(function(s){ return val(s) > CAPACITY; });
-    var warn = $("#warn"), text = $("#warntext");
-    if (over.length){
-      warn.classList.remove("ok");
-      warn.querySelector("b").textContent = "Slammed.";
-      var worst = over.reduce(function(a,b){ return val(a) > val(b) ? a : b; });
-      text.textContent = val(worst) + " tickets hit the kitchen during " + worst.name.toLowerCase() +
-        " — " + (val(worst) - CAPACITY) + " over capacity, arriving inside a six-minute window. " +
-        "This is where 28-minute ticket times, cold plates and comps come from, and no POS on the market sees it coming.";
-    } else {
-      warn.classList.add("ok");
-      warn.querySelector("b").textContent = "Smoothed.";
-      text.textContent = "Peak load is " + peak + " against a capacity of " + CAPACITY +
-        ". Every segment sits under the line, and expo saw the 8:25 build at 7:40 — with time to fire ahead of it.";
+  function drawDetail(){
+    var r = recsFor(sel), s = S[r.st];
+    var canMode = vintage !== "day1" && r.st !== "PROT";
+
+    var h = '<div class="dt-head">' +
+              '<h3 class="dt-when">' + r.when + '</h3>' +
+              '<span class="statepill ' + s.pill + '">' + s.label + '</span>' +
+            '</div>';
+
+    h += '<div class="modes" role="group" aria-label="Operating mode">';
+    ["INSTITUTION","GROWTH","EVENT","PROTECTED"].forEach(function(m){
+      h += '<button class="modebtn" data-mode="' + m + '" aria-pressed="' + (r.mode===m) + '"' +
+           (canMode ? "" : " disabled") + '>' + m + '</button>';
+    });
+    h += '</div>';
+
+    if (r.st === "OPP" && r.mode !== "GROWTH"){
+      h += '<div class="modenote">This cell has real unused capacity. Set it to <b>GROWTH</b> to unlock demand generation — that is a leadership decision, taken one window at a time, never venue-wide.</div>';
+    } else if (r.st === "OVER"){
+      h += '<div class="modenote"><b>State beats mode.</b> Even in Growth mode, demand generation stays blocked on an Overloaded cell. That is the safety property the whole system rests on.</div>';
+    } else if (r.st === "PROT"){
+      h += '<div class="modenote">Protected overrides every other mode and cannot be bulk-cleared.</div>';
     }
 
-    var total = SEG.reduce(function(n,s){ return n + val(s); }, 0);
-    $("#t-queued").textContent = total;
-    $("#t-peak").textContent = peak;
-  }
+    h += '<div class="evid">';
+    EVID[r.st].forEach(function(e){
+      var miss = /not measured|not logged/.test(e[1]);
+      h += '<span class="ev' + (miss ? " miss" : "") + '">' + e[0] + ' <b>' + e[1] + '</b></span>';
+    });
+    h += '</div>';
 
-  function drawQueue(freshIdx){
-    queueEl.innerHTML = queue.map(function(t, i){
-      return '<div class="qrow' + (i === freshIdx ? " fresh" : "") + '">' +
-               '<span class="qtag">' + t.tag + '</span>' +
-               '<span class="qitem">' + t.item + '</span>' +
-               '<span class="qzone">' + t.zone + '</span>' +
-               '<span class="qwin">' + WINLABEL[t.win] + '</span>' +
-             '</div>';
-    }).join("");
-  }
+    h += '<div class="recs"><span class="eyebrow eyebrow--amber">Recommended — ' + r.allow.length + '</span>';
+    r.allow.forEach(function(a){
+      h += '<div class="rec' + (a.pri ? " rec--pri" : "") + '">' +
+             '<div class="rec-top"><span class="rec-cls">' + a.cls + '</span></div>' +
+             '<p>' + a.text + '</p><div class="impact">' +
+             a.impact.map(function(i){
+               var c = /Affects/.test(i) ? " im--hot" : (/Do now/.test(i) ? " im--do" : (/Approver/.test(i) ? " im--app" : ""));
+               return '<span class="im' + c + '">' + i + '</span>';
+             }).join("") +
+           '</div></div>';
+    });
+    h += '</div>';
 
-  // ── Guest ordering interface ─────────────────────────
-  function refreshSend(){
-    var ready = pickedItem && pickedWin;
-    $("#send").disabled = !ready;
-    if (ready){
-      $("#send-note").textContent = pickedItem + " → landing " + WINLABEL[pickedWin].toLowerCase() +
-        ". The kitchen already knows it's coming; the runner will find RED BOOT 4 at the dance floor edge.";
+    if (r.block.length){
+      h += '<div class="blocked"><span class="eyebrow">Considered and refused — ' + r.block.length + '</span>';
+      r.block.forEach(function(b){
+        h += '<div class="blk"><span class="blk-x">&#10005;</span><div class="blk-b">' +
+               '<div class="blk-t">' + b.text + '</div>' +
+               '<div class="blk-r">' + b.cls + ' — ' + b.reason + '</div>' +
+             '</div></div>';
+      });
+      h += '</div>';
+      h += '<div class="note"><b>Blocked recommendations are shown, not hidden.</b> If the operator can\'t see that the system considered and refused these, they\'ll assume it wasn\'t smart enough to think of them — and go do it manually.</div>';
     }
+
+    document.getElementById("detail").innerHTML = h;
+    document.querySelectorAll(".modebtn:not([disabled])").forEach(function(b){
+      b.addEventListener("click", function(){
+        state[sel] = [state[sel][0], b.dataset.mode];
+        drawGrid(); drawDetail();
+      });
+    });
   }
 
-  document.querySelectorAll(".item").forEach(function(b){
-    b.addEventListener("click", function(){
-      document.querySelectorAll(".item").forEach(function(o){ o.setAttribute("aria-pressed","false"); });
-      b.setAttribute("aria-pressed","true");
-      pickedItem = b.dataset.item;
-      refreshSend();
-    });
-  });
-
-  document.querySelectorAll(".winbtn").forEach(function(b){
-    b.addEventListener("click", function(){
-      document.querySelectorAll(".winbtn").forEach(function(o){ o.setAttribute("aria-pressed","false"); });
-      b.setAttribute("aria-pressed","true");
-      pickedWin = b.dataset.win;
-      refreshSend();
-    });
-  });
-
-  $("#send").addEventListener("click", function(){
-    if (!pickedItem || !pickedWin) return;
-    var seg = SEG.filter(function(s){ return s.id === pickedWin; })[0];
-    seg.withRail += 1;
-    seg.without  += 1;
-
-    queue.unshift({ tag:"RED BOOT 4", item:pickedItem, zone:"Dance floor edge", win:pickedWin });
-    if (queue.length > 7) queue.pop();
-
-    draw(pickedWin);
-    drawQueue(0);
-
-    var btn = this;
-    btn.classList.add("buzz");
-    setTimeout(function(){ btn.classList.remove("buzz"); }, 340);
-
-    $("#send-note").textContent = "Sent. " + pickedItem + " is sequenced to land " +
-      WINLABEL[pickedWin].toLowerCase() + " — you'll feel a buzz when it's on its way. " +
-      "You can't hear a chime in here, so the app never uses one.";
-
-    document.querySelectorAll(".item,.winbtn").forEach(function(o){ o.setAttribute("aria-pressed","false"); });
-    pickedItem = null; pickedWin = null;
-    $("#send").disabled = true;
-  });
-
-  // ── Mode toggle ──────────────────────────────────────
-  function setMode(m){
-    mode = m;
-    $("#m-with").setAttribute("aria-pressed", String(m === "with"));
-    $("#m-without").setAttribute("aria-pressed", String(m === "without"));
-    draw();
+  function setVintage(v){
+    vintage = v;
+    document.getElementById("v-week3").setAttribute("aria-pressed", String(v==="week3"));
+    document.getElementById("v-day1").setAttribute("aria-pressed", String(v==="day1"));
+    drawGrid(); drawDetail();
   }
-  $("#m-with").addEventListener("click", function(){ setMode("with"); });
-  $("#m-without").addEventListener("click", function(){ setMode("without"); });
+  document.getElementById("v-week3").addEventListener("click", function(){ setVintage("week3"); });
+  document.getElementById("v-day1").addEventListener("click", function(){ setVintage("day1"); });
 
-  // ── Module navigation ────────────────────────────────
   document.querySelectorAll(".mod[data-go]").forEach(function(b){
     b.addEventListener("click", function(){
       document.querySelectorAll(".mod[data-go]").forEach(function(o){ o.setAttribute("aria-current","false"); });
@@ -842,26 +774,17 @@
     });
   });
 
-  // ── Approval queue ───────────────────────────────────
   document.querySelectorAll("#apprlist .btn").forEach(function(b){
     b.addEventListener("click", function(){
-      var card = b.closest(".appr");
-      var word = b.textContent.trim();
+      var card = b.closest(".appr"), word = b.textContent.trim();
       var label = document.createElement("span");
-      label.className = "resolved" + (/Reject|blocked/i.test(word) ? " no" : "");
-      label.textContent = (word === "Approve" ? "Approved" :
-                           word === "Reject" ? "Rejected" :
-                           word === "Keep blocked" ? "Kept blocked" :
-                           word === "Request permission" ? "Permission requested" :
-                           "Sent to Emily") + " · logged " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
-      card.classList.add("done");
-      card.appendChild(label);
+      label.className = "resolved" + (/Reject|Decline|protected/i.test(word) ? " no" : "");
+      label.textContent = word + " · logged " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+      card.classList.add("done"); card.appendChild(label);
     });
   });
 
-  buildAxis();
-  buildBars();
-  draw();
-  drawQueue(-1);
+  drawGrid();
+  drawDetail();
 })();
 </script>

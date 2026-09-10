@@ -4,660 +4,463 @@
 **Client:** Handlebar J BBQ Restaurant & Bar · 7116 E Becker Lane, Scottsdale, AZ 85254 · handlebarj.com
 **Author posture:** product architect · hospitality ops · revenue systems · WCM house standard
 **Companion doc:** `docs/LYNK-DESIGN-SYSTEM.md` (the guest-side system this connects to)
-**Date:** 2026-09-10
+**Version:** v2 — capacity-aware revision · 2026-09-10
 **Status:** Blueprint. Nothing in this document has been validated against real Handlebar J data.
 
 ---
 
-## 0. Read this first — what is verified and what is not
+## 0. What changed in v2, and what it invalidated
 
-Every number, count, and claim below falls into one of four buckets. They are labeled throughout. Do not let them blur.
+v1 of this blueprint answered the question *"how do we get Handlebar J more business?"* New owner intelligence says that question is wrong, and in places actively dangerous:
 
-| Bucket | Meaning | Example in this doc |
-|---|---|---|
-| **VERIFIED** | Confirmed from a primary source we hold | Nothing yet. The blueprint precedes the data. |
-| **STATED** | Someone told us; we have not seen it | "200+ private-event inquiries" |
-| **MODELED** | Our arithmetic on stated assumptions | The $25K break-even in §3 |
-| **ASSUMED** | Our judgment, waiting to be tested | Set-break ticket spike in §6 |
+- Handlebar J **sometimes has more business than it can comfortably handle.**
+- Guests stay because the experience **is** the destination. Table turnover is not necessarily the objective.
+- It is an **institution**, not a normal restaurant, and should not be operated like one.
+- **A marketing company has already been hired and paid.**
+- Ray is considering **a management company or a general manager.**
+- A more aggressive growth strategy — happy hour, promotions, media — **may** be pursued. It is **not finalized.**
 
-The "200-plus remembered inquiries" is **STATED**, and "remembered" is doing an enormous amount of work in that sentence. It may be 200 in a shoebox. It may be 40 in a phone. It may be a feeling. Day 1 of the engagement is finding out, and the Lead Desk ships with an `evidence` field on every record precisely so the difference is never lost again.
+**The corrected mission:**
 
----
+> Send the right business to the right days, while protecting the nights Handlebar J already handles well.
 
-## 1. Executive summary
+**The corrected central question:**
 
-**The brief is 85% right and 100% too big.** The strategic read — that Emily's job is revenue operations wearing a content costume, and that she needs a private backstage OS rather than a guest app — is correct and unusually mature. The module list, taken literally, is a 9-month build being asked to ship in 30 days.
+> **"What kind of business does Handlebar J want more of — and when?"**
 
-**What the brief gets right:**
-- Separating LYNK (guest) from J COMMAND (operator) is the single best decision in it. Most agencies conflate these and ship a beautiful thing nobody internally uses.
-- Refusing to optimize for followers. Correct, and rarer than it should be.
-- The data rules — CSV before API, no payment details, role-based approval, audit log, no auto-publish of sensitive content — are written like someone who has actually been sued. Keep every one of them.
-- Naming the Legacy Engine at all.
+### Three things in v1 that are now wrong, stated plainly
 
-**What the brief gets wrong:**
-- **Twelve screens in thirty days is a fantasy.** The MVP is five screens. §11 makes the cut.
-- **The Legacy Engine is buried at #6 and it is the actual crown jewel.** Ribs can be copied. A sound system can be bought. Forty years of the Herndon Brothers cannot be replicated by any venue in Arizona at any price. It is the only genuinely defensible asset on the list and it is ranked below Campaign Builder.
-- **The competitor list conflates two different things.** Gruene Hall, Billy Bob's, Broken Spoke, John T. Floore's and The White Horse are in Texas. No one in Scottsdale is choosing between Handlebar J and Gruene Hall on a Friday night. Those are **reference archetypes** — study them for form. The **competitive set** is Phoenix metro. Mixing them produces strategy that answers the wrong question. §9 separates them.
-- **Nothing in the brief touches the guest's actual friction.** Ten modules of backstage instrumentation, and the guest experience on a Friday night is unchanged. Which brings us to the thing that makes this award-winning instead of merely competent.
+**1. The v1 break-even math is invalid.** v1 offered a path of "~76 additional covers per night × 18 event nights." If those nights are already at or beyond comfortable capacity, **that path does not exist.** You cannot add 76 covers to a full room, and trying is how an institution becomes a tourist trap with a two-hour wait and a one-star review about the service. §4 re-derives the arithmetic on revenue that does not consume a seat.
 
-**The thesis of this document:** J COMMAND's dashboard is table stakes. Every agency can build a dashboard. The defensible, ownable, genuinely new thing here is **THE RAIL** — an ordering system built on the insight that a live-music venue does not run on a clock, it runs on a setlist. §6 is the center of gravity of this entire blueprint. Everything else is the instrumentation that proves it works.
+**2. The Rail was made the center of gravity. It should not be.** v1 called it "the thesis" and claimed it would improve table turns. Handlebar J may not *want* faster turns. The Rail is demoted to an **optional, approval-gated, single-event experiment** whose stated purpose is narrow: test whether timing-based requests reduce kitchen surges at music breaks without harming the guest experience. It may also prove to be added complexity for no benefit — and §8 requires the pilot to be able to return that answer.
 
-**One-line version:** Toast says what happened. Grok watches the market. J COMMAND says what to do next. **The Rail changes what happens.**
+**3. The system's default posture was growth. It is now caution.** A dashboard that recommends "promote harder" into an overloaded room is worse than no dashboard. The recommendation engine in §3 is now a **suppression engine first**: it decides what it is *not allowed* to say before it decides what to say.
+
+### The strategic order
+
+1. Understand demand · 2. Protect the institution · 3. Choose growth windows · 4. Promote selectively · 5. Test The Rail · 6. Scale only what improves revenue **without damaging the experience**
 
 ---
 
-## 2. App mission
+## 1. Evidence rules — unchanged and now more important
 
-> **J COMMAND exists to answer one question, once per day, with evidence: what is the highest-value action Emily can take next for Handlebar J?**
-
-Three non-negotiable properties:
-
-1. **It is opinionated.** The dashboard does not present twelve charts and wish Emily luck. It ranks. One recommended action sits at the top, with the reasoning and the number behind it visible on demand.
-2. **It is honest about attribution.** Four separated revenue buckets, always: *already happening* / *influenced* / *directly attributed* / *pipeline*. A system that lets Emily quietly claim baseline revenue as her own is worse than no system, because it destroys the trust the $25K depends on.
-3. **It never publishes or prices without a human.** Ray and Joanne hold brand authority. The software's job is to make approval fast, not to route around it.
-
----
-
-## 3. The $25,000 question — the honest arithmetic
-
-Before a line of code, the engagement has to survive a napkin. This is **MODELED** on **ASSUMED** inputs and must be re-run the moment real Toast data lands.
-
-**Assumptions (all require verification):**
-- Incremental contribution margin on additional food/bar covers, where fixed costs are already carried: **40–50%**. Restaurant variable cost on incremental sales is roughly food cost + variable labor; fixed rent, base labor, and utilities are already paid by the baseline.
-- Private events carry higher contribution — **50–60%** — because they are pre-committed, staffed to a known headcount, and often include a room minimum.
-- Handlebar J runs roughly **16–20 event nights per month**.
-
-**The break-even:**
-
-| Path | Math | Monthly incremental revenue needed |
-|---|---|---|
-| Food & bar only, at 45% contribution | $25,000 ÷ 0.45 | **~$55,600** |
-| Blended (70% F&B, 30% private events) | $25,000 ÷ 0.485 | **~$51,500** |
-| Private events only, at 55% | $25,000 ÷ 0.55 | **~$45,500** |
-
-**What ~$52,000/month actually looks like, three ways:**
-
-| Route | Requirement |
+| Bucket | Meaning |
 |---|---|
-| **Spread across event nights** | ~$2,900 incremental per event night, ×18 nights. At a $38 average check, that is **~76 additional covers per night** — or a smaller number of covers plus a $4–6 average-check lift. |
-| **Private events** | **4–6 additional private events per month** at $9–12K each. This is the highest-leverage path and the one the Lead Desk exists to unlock. |
-| **Mixed (recommended)** | 2–3 additional private events (~$28K) + a $3 average-check lift across ~1,400 monthly covers (~$4.2K) + advance-seat/package revenue on Herndon Brothers nights (~$12K) + gift card and merch lift (~$8K). |
+| **VERIFIED** | Confirmed from a primary source we hold |
+| **STATED** | Someone told us; we have not seen it |
+| **MODELED** | Our arithmetic on stated assumptions |
+| **ASSUMED** | Our judgment, waiting to be tested |
 
-**The verdict Emily must be willing to say out loud in the pitch:** *"Break-even on my fee is roughly $52,000 a month in incremental revenue. Here is the plan to get there, here is how I'll prove which part was mine, and here is the number at which you should fire me."*
+Nothing in this document is VERIFIED. "Handlebar J is sometimes overloaded" is **STATED** — credible, from the owner, and still not measured. Which is exactly why the demand model's default state is `UNKNOWN` and not `OVERLOADED`.
 
-That sentence is worth more than any deck. Note that "4–6 additional private events per month" is the whole ballgame — and if the 200-inquiry backlog is real and unworked, the first two months of that number may already be sitting in a shoebox.
-
-**Structure note:** the $25K is a professional fee. Ad spend, merch inventory, print, venue costs, and outside vendors are separate line items and must never be netted against it. Blending them is how agencies end up eating media budget out of their own margin and then quietly reducing the work.
-
----
-
-## 4. User personas
-
-| Persona | Role | Opens the app | Needs | Must never be able to |
-|---|---|---|---|---|
-| **Emily** — Fractional CMO / Revenue Operator | Owner-operator of the system | 3–8× daily, heavily on mobile, often one-handed in a loud room | Today's action, tonight's shot list, lead follow-ups, what's awaiting Ray | Publish sensitive content without approval; alter Toast; see raw payment data |
-| **Ray Herndon** — Owner, brand authority | Approver, story source | 2–4× weekly, ~90 seconds per session, phone | A queue he can clear with his thumb; a weekly brief he can read in 6 minutes | — (full authority) |
-| **Joanne** — Owner / operations | Approver, ops truth | Weekly + event days | Event accuracy, staffing implications, cost reality | — (full authority) |
-| **Floor Lead / MOD** | Runs the night | Event nights only, tablet at the host stand | The Rail queue, zone map, VIP/advance-seat list | Approve marketing content; see financials beyond tonight |
-| **Kitchen Expo** | Ticket flow | Event nights, fixed screen | Load curve, sequenced tickets, hold/fire control | Anything else |
-| **WCM (Lorenzo / studio)** | Builds and maintains | Weekly | System health, build queue, cross-client patterns | Approve Handlebar J brand content |
-| **Grok / market watch** | Competitive input | Automated + manual entry | A structured place to put observations | Publish anything; touch revenue data |
-
-**Design consequence:** Emily's and the Floor Lead's interfaces are **loud-room, low-light, one-thumb**. Ray's interface is **a queue and a brief, nothing else**. Building one interface for all of them is how this fails.
+The "200-plus remembered inquiries" remains **STATED**, and *remembered* is still doing enormous work in that sentence.
 
 ---
 
-## 5. Core workflows
+## 2. Operating modes
 
-Five loops. Everything in the app serves one of them; if a feature serves none, it does not ship.
+The venue is not in one condition. J COMMAND asks which mode a period is in **before** it does anything else. Mode is set by an authorized operator (§9) — never inferred by software alone.
 
-**Loop 1 — The Daily Loop (Emily, ~10 min, every morning)**
-`Open → read the single Recommended Action → check overnight leads → clear content approvals → confirm tonight's Rail setup → act`
+### 1 · INSTITUTION MODE — the default
 
-**Loop 2 — The Night Loop (Emily + Floor Lead, event nights)**
-`Tonight at the J → shot list → capture → Rail monitoring → post-event checklist → same-night asset dump to Vault`
+Protect the Handlebar J experience. Prioritize heritage, guest satisfaction, live-music quality, the Herndon legacy, repeat customers, artist relationships, community relationships, gift cards, merchandise, private events, and **accurate information**.
 
-**Loop 3 — The Lead Loop (Emily, continuous, SLA-driven)**
-`Inquiry lands → auto-timestamped → qualify → quote → follow-up cadence → deposit → booked → post-event referral ask`
-The single most important metric in this loop is **response time**. Every hospitality lead study points the same direction: speed beats polish. The Lead Desk's primary alert is not "new lead," it is **"lead aging past SLA."**
+**Do not aggressively promote already-overloaded nights.** This mode is the default because the cost of wrongly promoting is much higher than the cost of wrongly not promoting: an empty table is recoverable next week; a regular of twenty years who couldn't get a seat and won't come back is not.
 
-**Loop 4 — The Campaign Loop (Emily + Ray approval)**
-`Objective → offer → tracking code → assets → approval → launch → measure against threshold → SCALE / IMPROVE / HOLD / TEST / KILL`
-Every campaign is created with its **kill threshold already written down**. A campaign without a pre-declared kill number is a hobby.
+### 2 · GROWTH MODE — opt-in, per window, never global
 
-**Loop 5 — The Weekly Loop (Ray, 6 minutes, Monday)**
-`Brief lands → what made feria → what didn't → decisions needed from Ray → approve/decide → next 7 days locked`
+Aggressive marketing **only** where leadership has explicitly chosen to grow a specific business window. Happy hour, slower dayparts, Sunday/daytime programming, promotions, private events, gift cards, merchandise, community events, advance bookings.
+
+**Hard rule:** GROWTH MODE is never set venue-wide. It is set on a **daypart cell** (§3) with a named approver and an end date. "We're in growth mode" is not a valid system state.
+
+### 3 · EVENT MODE
+
+Optimize one specific event without assuming the venue needs more traffic. Tracks capacity, advance seats, cover, F&B attach, **kitchen pressure, staff pressure**, guest satisfaction, event revenue, repeat behavior.
+
+### 4 · PROTECTED MODE
+
+Memorials, sensitive family events, youth/school events, artist-sensitive events, private gatherings. **All marketing automation disabled.** Every content action requires explicit, per-item approval. No "remember this choice." No scheduling. No paid amplification. PROTECTED overrides every other mode and cannot be bulk-cleared.
 
 ---
 
-## 6. THE RAIL — a new way to order
+## 3. The Demand State model — the new center of the system
 
-> **Order by the song, not the seat.**
+### 3.1 The five states
 
-This is the section that matters. Everything above is competent. This is the part that is new.
-
-### 6.1 The insight
-
-Every restaurant ordering system on earth — Toast included, and every QR menu built on top of it — models a venue as **tables on a clock**. Party sits at 7:12. Order at 7:19. Fire. Deliver. Turn.
-
-**Handlebar J is not tables on a clock. It is a room on a setlist.**
-
-On a Herndon Brothers night, the room has a rhythm that no POS knows about:
-
-- During a set, people are **on the dance floor, not in their seats**. A server delivering ribs to an empty chair during "Amarillo By Morning" is delivering to nobody.
-- When the band breaks, **the entire room orders at once**. The kitchen takes a wall of tickets in a six-minute window, quality drops, tickets take 28 minutes, and the food lands *just as the next set starts* — so it sits, or gets eaten cold, or gets comped.
-- The guest's actual desire is not "food now." It is **"food that arrives when I'm sitting down and the band isn't playing."** No ordering system in hospitality lets a guest express that.
-- Nobody wants to hear a server recite specials at 92 dB, and nobody can read an 8-point menu at 8 lux.
-
-Toast optimizes table turns. **A music venue does not want table turns — it wants people to stay, drink, dance, and come back.** The entire ordering paradigm is misaligned with the business model.
-
-### 6.2 The mechanism
-
-The Rail replaces "when do you want to order" with **"where in the show do you want this to land."**
-
-**The Set Clock** is the spine. A night is not hours, it is segments, published by the band and locked by the Floor Lead:
-
-```
-DOORS → SET 1 → BREAK 1 → SET 2 → BREAK 2 → SET 3 → LAST CALL
-5:00     7:30    8:25       8:45    9:40      10:00    11:40
-```
-
-Every guest order carries a **landing window**, not a fire time:
-
-| Guest picks | What it means | Kitchen sees |
+| State | Meaning | Posture |
 |---|---|---|
-| **Now** | Standard. They're seated and hungry. | Fire immediately |
-| **Before the band** | Land it with ≥15 min of Set 1 to spare | Fire at T-32 from Set 1 |
-| **At the break** | Land it 90 seconds into Break 1 | Fire at T-24 from Break 1 |
-| **After this song** | Encore/last-song trigger, drinks only | Expo fires on Floor Lead's tap |
-| **Last call** | Late-night board only | Fire at T-18 from Last Call |
+| **OVERLOADED** | Demand exceeds comfortable capacity. Service, kitchen, or staff under strain. | Protect. Never add demand. |
+| **HEALTHY** | Full or near-full, running well. | Improve yield, don't add volume. |
+| **OPPORTUNITY** | Real unused capacity. | Candidate for GROWTH — with leadership sign-off. |
+| **PROTECTED** | Sensitive occasion. | No promotion of any kind. |
+| **UNKNOWN** | Not enough evidence to say. | **Default.** Measure before acting. |
 
-The kitchen no longer receives a wall. It receives a **known demand curve, hours in advance.** Expo sees the load for Break 1 building at 7:40pm and can prep accordingly. The wall of tickets at 8:25 becomes a scheduled, smoothed, staffed event.
+### 3.2 The Demand Grid
 
-**This is demand shaping via entertainment schedule, and as far as we can find, nobody in hospitality is doing it.** It is the patentable-feeling idea in this document.
+Demand state is not a property of the venue. It is a property of a **day × daypart cell**. Friday 9pm and Tuesday 3pm are different businesses in the same building.
 
-### 6.3 The Boot Tag — a tab that isn't a table
+The dashboard's primary object is a **7-day × daypart grid**, every cell carrying a state. On day one nearly every cell reads `UNKNOWN`, and **that is the honest and correct first screen.** A system that opens on confident colors it has not earned is lying to the operator on its first impression.
 
-Table-bound tabs break the moment someone dances. The Rail identifies **people, not furniture.**
+### 3.3 What determines a state
 
-- On arrival (or at cover), the guest gets a **Boot Tag** — a short call sign they choose or are assigned: `RED BOOT 4`, `TWO-STEP 9`. Printed on the cover stub, held in the phone, spoken out loud without embarrassment.
-- The tab follows the tag. Move from a table to the rail to the dance floor to the patio — the tab moves.
-- Runners find guests by **zone + tag**, not table number. The room is divided into named zones a human can actually use: `STAGE LEFT` · `THE RAIL` · `DANCE FLOOR EDGE` · `BACK BOOTHS` · `PATIO` · `BAR`.
-- **Cover rolls into the tab.** Pay cover once, it becomes the tag, and a portion is applied as credit toward food or merch. This is the single highest-leverage average-check mechanic in the whole system: it converts a sunk cost into a spending trigger.
-
-Name note: "The Rail" is the bar rail — where people actually stand at a honky-tonk — *and* the kitchen rail where tickets hang. The name is doing two jobs on purpose.
-
-### 6.4 Built for 92 dB and 8 lux
-
-The interface constraints are the design brief:
-
-- **No reading.** Photographic tiles at thumb size. The ribs look like ribs.
-- **One thumb, one hand.** Every primary action reachable from the bottom third of the screen; the other hand is holding a drink.
-- **High-contrast, low-emission.** Amber-on-smoke, not white-on-white. A phone at full white brightness in a dark saloon is antisocial — it lights up the person's whole face and ruins the room. The Rail's palette is chosen so the screen doesn't become a lantern.
-- **Haptics as confirmation.** You cannot hear a chime. You can feel a buzz. Order placed = distinct haptic pattern. Food landing = second pattern.
-- **Zero-typing.** Everything is a tap. Names, notes, and modifiers are pre-set chips.
-
-### 6.5 The Round
-
-Bar-group friction is a real revenue leak: one person buys, everyone else means to reciprocate, nobody tracks it, the tab under-performs.
-
-**The Round** — one guest opens a round, the rest join by tapping tags together or scanning. The split is agreed *before* the drinks arrive: even split, one buyer, or per-item. The app remembers whose round is next and surfaces it once, quietly, at the right moment. Not nagging — one prompt, at the break.
-
-**ASSUMED:** group tabs with pre-agreed splits raise per-head spend because the social friction of "who's paying" is removed. This is testable in one weekend and should be tested before it is built.
-
-### 6.6 Song-triggered offers — armed, never invented
-
-When the band starts a specific song, a **pre-approved** offer can fire to guests in the room.
-
-Critical constraint, and it is non-negotiable: **the software never invents an offer, never sets a price, and never touches Toast configuration.** Ray or Joanne approve a small library of offer templates in advance. The Floor Lead *arms* one for the night. The trigger fires it. It expires on its own.
-
-Example, fully approved in advance: Herndon Brothers open the encore → guests in the room see *"Encore Board — half rack + two drinks, $32, next 20 minutes."* It is a real, scarce, event-locked offer that exists only inside the room, and it converts the emotional peak of the night into an order.
-
-This is the direct bridge from the brief's `CONTENT → ATTENTION → INQUIRIES → BOOKINGS → TOAST SALES → REPEAT` chain into a single measurable moment, because the offer carries a tracking code and lands in the Feria dashboard the next morning as attributed revenue.
-
-### 6.7 What The Rail is worth
-
-**MODELED on ASSUMED inputs. Test before believing.**
-
-| Mechanic | Hypothesis | Test |
+| Signal | Source | Available day 1? |
 |---|---|---|
-| Cover-to-credit | +$4–7 average check on cover nights | One month, alternating nights, A/B |
-| Set-break sequencing | Ticket-time variance down; comp/void rate down | Compare comp+void % vs. baseline nights |
-| Landing windows | Fewer cold-food comps, higher food attach on show nights | Food attach rate on event nights |
-| The Round | +$3–6 per head in groups of 4+ | Group tabs vs. individual, same nights |
-| Song-triggered offers | 6–12% take rate in-room | Tracking code redemption |
-| Boot Tag zones | Higher second-round rate from dance-floor guests | Reorder rate by zone |
+| Covers vs. comfortable capacity | Toast CSV + a stated capacity number | Needs capacity from ops |
+| Kitchen ticket times | Toast, if exported at that granularity | **Often not** |
+| Wait times / turn-aways | **Manual** — host stand | No |
+| Labor hours vs. sales | Toast labor export, plan-dependent | Maybe |
+| Guest complaints | **Manual** — one tap at the host stand | No |
+| Staff strain | **Manual** — MOD's end-of-night rating, 1–5 | No |
+| Reservations / advance seats | Reservation platform | Maybe |
 
-If even three of six hold, the average-check lift alone carries a meaningful share of the §3 break-even.
+**The uncomfortable finding this surfaces immediately:** the two signals that most reliably identify OVERLOADED — turn-aways and staff strain — **are not in Toast and are not in any marketing tool.** They require a human tapping a screen at the end of the night. That 20-second habit is the highest-value operational change in this entire document, and it costs nothing.
 
-### 6.8 How to pilot it in 30 days with zero Toast integration
+Until it exists, the honest answer is `UNKNOWN`.
 
-This is the part that makes it real instead of a slide.
+### 3.4 Recommendation classes and the suppression matrix
 
-**The Rail Zero** — one event night, no API, no build:
-1. A QR code on every table and along the bar rail → a static page (this repo's stack already does static export cleanly).
-2. Guest picks a landing window from four buttons. Submits with a name and zone.
-3. The request lands in a Supabase table — **exactly the pattern already running in `lib/lynk-submissions.js` and `supabase/lynk_submissions.sql`.** Anon insert only, RLS locked, no reads from the client.
-4. A tablet at expo shows the queue, grouped by landing window, sorted by fire time.
-5. Server enters the actual order into Toast as normal. **The Rail schedules; Toast still transacts.**
+Every recommendation the system can produce belongs to exactly one class.
 
-That is a weekend of work, it violates none of the data rules, it touches nothing in Toast, and it produces a real answer to the only question that matters: *do guests use a landing window when you give them one?*
-
-If the answer is yes, the Toast partner-API integration in Phase 3 is justified by evidence rather than enthusiasm. If it's no, we learned it for the cost of a QR code instead of a nine-month build.
-
----
-
-## 7. Screen-by-screen design
-
-Twelve screens are specified. Five ship in the MVP (marked **MVP**); the rest are designed now so the data model doesn't have to be rebuilt later.
-
-### 7.1 Home Dashboard **MVP**
-- **Purpose:** answer "what do I do next" in under five seconds.
-- **First thing Emily sees:** one Recommended Action, in a sentence, with the number behind it. Not a chart wall.
-- **Main information:** the action · tonight's event state · leads aging past SLA · items awaiting Ray · yesterday vs. comparable day.
-- **Actions:** accept the action, open the lead, open tonight, push to Ray.
-- **Inputs:** Toast CSV, Lead Desk, Approval Queue, event calendar.
-- **Outputs:** an executed action with a timestamp (this is what the audit log records).
-- **Permissions:** Emily, Ray, Joanne, WCM. Floor Lead sees a reduced version.
-- **Revenue support:** it is the prioritization engine. Its entire value is preventing Emily from spending Tuesday on the wrong thing.
-
-### 7.2 Tonight at the J **MVP**
-- **Purpose:** run the night.
-- **First thing:** the Set Clock, live, with the current segment lit.
-- **Main information:** band · cover · dance lesson · advance seats · featured item · armed offer · shot list · Rail load · weather · post-event checklist.
-- **Actions:** lock the Set Clock, arm an approved offer, check off shots, mark the checklist.
-- **Permissions:** Emily + Floor Lead write; Ray/Joanne read; Expo sees the Rail panel only.
-- **Revenue support:** the night is the product. This screen makes sure nothing capturable is missed and the room's peak converts.
-
-### 7.3 Feria **MVP**
-- **Purpose:** what made money.
-- **First thing:** the four attribution buckets, separated and never summed into one hero number.
-- **Main information:** revenue vs. comparable day · average check · covers · item winners/losers · discounts, comps, voids · online orders · gift cards · merch · event performance · campaign performance.
-- **Actions:** tag any line SCALE / IMPROVE / HOLD / TEST / KILL; drill to source rows.
-- **Inputs:** Toast CSV import; manual entry for what Toast can't export (§8).
-- **Revenue support:** it is the scoreboard the fee is judged against.
-
-### 7.4 Content Vault **MVP**
-- **Purpose:** never lose an asset, never publish one without permission.
-- **First thing:** what still needs capture for the next 7 days — not a grid of old photos.
-- **Main information:** asset · date · location · people · **permission status** · event · campaign · platform · usage restrictions · final/rough · caption ideas · CTA.
-- **Actions:** upload, tag, set permission, mark restricted, push to campaign.
-- **Hard rule:** an asset with `permission: none` or `sensitive: true` cannot be attached to a scheduled post. The system blocks it. Memorial, youth, school, and artist content defaults to restricted.
-- **Revenue support:** capture cost is the largest hidden expense in content ops. Re-shooting because a file was lost is pure waste.
-
-### 7.5 Lead Desk **MVP**
-- **Purpose:** convert the pipeline. This is where the private-event money is.
-- **First thing:** **leads aging past SLA**, red, at the top. Not the new ones — the rotting ones.
-- **Pipeline:** `NEW → QUALIFIED → QUOTED → DEPOSIT → BOOKED → COMPLETED → REPEAT/REFERRAL`
-- **Fields:** inquiry date · source · event type · guest count · preferred date · budget range · **first response time** · assigned · quote status · deposit status · estimated revenue · final revenue · referral source · next follow-up · **evidence** (where this record came from — see §0).
-- **Revenue support:** the highest-leverage screen in the app. Four to six additional private events per month is the §3 break-even.
-
-### 7.6 Campaign Builder
-- **Purpose:** run tests with pre-declared kill thresholds.
-- **Required at creation:** objective · audience · offer · date · assets · landing page · Toast item/offer · QR · tracking code · budget · owner · start · end · **success threshold** · **kill threshold**.
-- **Rule:** no campaign saves without both thresholds. Non-negotiable.
-
-### 7.7 Legacy Engine
-- **Purpose:** turn forty years into a permanent content supply.
-- **Why it should be built earlier than the brief says:** it is the only asset on the entire list that is structurally impossible to copy. Everything else — ribs, sound, dance floor, packages — can be matched by a competitor with capital. The Herndon family timeline cannot.
-- **Contents:** family timeline · venue history · former band members · Herndon Brothers milestones · famous guests · Arizona music stories · archival photographs · historic events · anniversary dates · approved interview clips · story status · permission status.
-- **Output series:** *On This Stage* · *Ray's Road Stories* · *40 Years of the Herndon Brothers* · *Arizona Country Music at the J* · *Where Western Hospitality Is Always a Tradition*.
-- **Urgency note, stated plainly:** archival memory is perishable. The people who hold these stories will not always be available to tell them. Interview capture should begin in month one regardless of what else slips.
-
-### 7.8 Community Network
-- **Purpose:** remember and serve relationships. Chaparral High School, coaches, musicians, real-estate professionals, sponsors, charities, hospitality partners, photographers, DJs, bands.
-- **Fields:** relationship type · last interaction · potential collaboration · permission status · upcoming opportunity · follow-up date · notes.
-- **Guardrail, enforced in software:** no bulk send, no mail-merge, no export-to-outreach-tool. Rate-limited to individual, human-written contact. The brief says "do not turn this into a spam machine" — that has to be a constraint in the code, not a sentence in a doc, or it will become one within a quarter.
-
-### 7.9 Competitor Watch
-See §9 — the list needs restructuring before the screen is built.
-
-### 7.10 Approval Queue **MVP**
-- **Purpose:** let Ray clear his responsibilities with his thumb in 90 seconds.
-- **First thing:** the oldest blocking item.
-- **States:** `Draft → Needs review → Approved / Rejected → Scheduled → Published → Archived`
-- **Design constraint:** Ray's view is a stack of cards, swipe-scale. If approval takes more than 15 seconds per item, it will not happen, and the whole governance model collapses.
-- **Audit:** every approval, rejection, and edit is logged with actor and timestamp, immutably.
-
-### 7.11 Weekly Brief **MVP-lite (generated, not a screen)**
-- Ships as a generated PDF/email in the MVP. The interactive screen comes later.
-- Contents per the brief: what made feria · what didn't · best/weakest items · best/weakest event · best content · best CTA · best lead source · pipeline · website friction · recommended tests · recommended cuts · **decisions needed from Ray** · next 7 days.
-- **The "decisions needed from Ray" block is the most important section of the brief and goes at the top, not the bottom.** A report Ray reads and takes no action from is a newsletter.
-
-### 7.12 Settings & Permissions
-Roles, approval routing, SLA thresholds, Toast import mapping, audit log viewer, data retention.
-
----
-
-## 8. Data model
-
-### 8.1 Core entities
-
-```
-Venue ─┬─ Event ─┬─ SetClock ─── SetSegment[]
-       │         ├─ Campaign[] ── TrackingCode
-       │         ├─ RailTicket[] ── LandingWindow
-       │         └─ ContentAsset[]
-       ├─ SalesDay ─── SalesLine[] (from Toast CSV)
-       ├─ Lead ─── LeadEvent[] (status transitions, timestamped)
-       ├─ ContentAsset ─── Permission
-       ├─ LegacyRecord ─── Permission
-       ├─ Contact (Community) ─── Interaction[]
-       ├─ CompetitorObservation
-       ├─ ApprovalItem ─── AuditEntry[]
-       └─ User ─── Role
-```
-
-### 8.2 Toast import structure
-
-| Field | Source | Notes |
-|---|---|---|
-| date, day_of_week, hour | **Toast export** | Hour-level granularity is essential — the whole Rail thesis lives in the hourly curve |
-| menu_item, menu_category | **Toast export** | |
-| quantity_sold, gross_sales, net_sales | **Toast export** | |
-| discounts, comps, voids | **Toast export** | Comp/void rate is the primary Rail success metric |
-| order_source | **Toast export** | dine-in / online / takeout |
-| check_count, average_check | **Toast export** (or derived) | |
-| gift_card_activity | **Toast export**, varies by plan | May require separate report |
-| merch_sku | **Toast export** *if* merch is rung through Toast | **ASSUMED it is. Verify day 1.** If merch is cash-and-a-shoebox, it is manual entry and that is a finding in itself. |
-| labor | **Toast export**, plan-dependent | Nice to have; not MVP-blocking |
-| **event_id** | **MANUAL** | Toast does not know which band played. This join is the entire analytical value of the system. |
-| **cover_charge_revenue** | **MANUAL** unless rung as a Toast item | Strong recommendation: ring cover as a Toast SKU so it enters the data automatically |
-| **advance_seats_sold** | **MANUAL** or reservation platform export | |
-| **weather** | **AUTO** (free API) | Cheap, and materially explains variance on a patio-heavy venue |
-| **campaign_id / tracking_code** | **MANUAL** at campaign creation | |
-| **private_event_revenue** | **MANUAL** from contract | |
-
-**The critical realization:** Toast exports tell you *what* sold and *when*. They cannot tell you *why*. The `event_id` join — mapping every sales hour to the band, the cover, the weather, and the active campaign — is the thing that converts a sales export into intelligence. It is manual, it takes Emily about four minutes per event night, and it is the highest-return four minutes in the whole system.
-
-### 8.3 Explicitly excluded from the data model
-
-Per the brief's rules, and enforced at the schema level so it cannot drift:
-- No card numbers, no payment tokens, no PAN fragments.
-- No customer names from Toast checks.
-- No individual guest purchase histories in the MVP.
-- Guest-level data is **aggregated or anonymized** at import. The importer strips prohibited columns before write, and rejects a file that contains a payment column rather than silently dropping it — a silent drop teaches nobody.
-
----
-
-## 9. Competitor Watch — restructured
-
-The brief's list mixes two incompatible categories. Split it.
-
-### Competitive set — Phoenix metro. These take Handlebar J's Friday night.
-
-| Venue | Watch for |
+| Class | Examples |
 |---|---|
-| Harold's Cave Creek Corral | Sports + BBQ + bar crossover; the Cave Creek draw |
-| Buffalo Chip Saloon | Bull riding, dance floor, the "authentic Arizona" claim |
-| Rusty Spur Saloon | Old Town tourist capture; walk-in music |
-| Foley Ranch Boots & BBQ | Direct BBQ + country positioning; newest threat |
-| Dierks Bentley's Whiskey Row | Brand-name draw, scale, Scottsdale footprint |
-| Roosters Country | Dance floor, lessons, country nights |
-| The Stillery | Nashville-model food + live music |
-| Scootin' Boots | Dance-focused, lesson programming |
+| **DEMAND-GENERATING** | Promote a night, paid reach, discount offers, "come tonight" posts |
+| **YIELD** | Featured item attach, advance seats, average-check work |
+| **CAPACITY-FREE** | Gift cards, merchandise, routing private events to open dates |
+| **EXPERIENCE** | Information accuracy, wait communication, service coordination, staffing flags |
+| **ASSET** | Legacy capture, content library, community relationships |
+| **ROUTING** | Shift promotion to another daypart, route inquiries to open dates |
+| **MEASUREMENT** | Establish a baseline, start logging turn-aways, confirm capacity |
 
-### Reference archetypes — Texas institutions. Study the form, don't chase them.
+**The suppression matrix — this is the product.**
 
-Gruene Hall · Billy Bob's Texas · The White Horse · Broken Spoke · John T. Floore's Country Store
+| Demand state | DEMAND-GEN | YIELD | CAPACITY-FREE | EXPERIENCE | ASSET | ROUTING | MEASUREMENT |
+|---|---|---|---|---|---|---|---|
+| **OVERLOADED** | **BLOCKED** | friction-free only | allowed | **priority** | allowed | **priority** | allowed |
+| **HEALTHY** | manual only | **priority** | allowed | allowed | allowed | allowed | allowed |
+| **OPPORTUNITY** | GROWTH mode + approval | allowed | allowed | allowed | allowed | allowed | allowed |
+| **PROTECTED** | **BLOCKED** | **BLOCKED** | **BLOCKED** | allowed | approval each time | **BLOCKED** | allowed |
+| **UNKNOWN** | **BLOCKED** | allowed | allowed | allowed | allowed | allowed | **priority** |
 
-These are not competitors. They are the best examples in America of the thing Handlebar J *is* — a historic music institution — and they are worth studying for one reason only: **how they monetize legacy.** Gruene Hall's merch, Broken Spoke's dance lessons, Floore's mythology. That is Legacy Engine research, not competitive intelligence, and putting them in the same table as Rusty Spur produces confused strategy.
+Three rules fall out of this matrix and must be enforced in code, not in a style guide:
 
-**Fields per observation:** competitor · date · event · offer · price · content example · website flow · customer complaint · strength · weakness · labor complexity · risk · feria value · recommendation.
+1. **The dashboard can never recommend adding traffic to an OVERLOADED or PROTECTED period.** Not "de-prioritized" — the recommendation is not generatable.
+2. **UNKNOWN blocks demand generation too.** Absence of evidence is not permission. The correct action on an unknown cell is to go measure it.
+3. **Blocked recommendations are shown, struck through, with the reason.** The operator must be able to see that the system considered and refused "promote Friday" — otherwise they will assume it wasn't smart enough to think of it, and will do it manually.
 
-**Recommendations:** `BORROW` · `IMPROVE` · `TEST` · `IGNORE` · `AVOID`
-
-**Added field, not in the brief: `labor complexity`.** The most common way a restaurant loses money copying a competitor's promotion is discovering the promotion requires a prep station and a person they don't have. Any BORROW that raises labor gets flagged before it reaches a campaign.
-
----
-
-## 10. Permissions, security, and approval
-
-### Roles
-
-| Role | Feria | Leads | Content | Approve | Rail | Settings |
-|---|---|---|---|---|---|---|
-| Owner (Ray, Joanne) | full | full | full | **yes** | full | full |
-| Operator (Emily) | full | full | full | request only | full | limited |
-| Floor Lead | tonight only | none | tonight only | no | **run** | no |
-| Expo | no | no | no | no | queue only | no |
-| WCM | full | full | full | no | full | full |
-| Read-only | summary | no | no | no | no | no |
-
-### Non-negotiable rules
-
-1. **No automated publishing of high-risk content.** Memorial, youth/school, artist, and guest-featuring content requires explicit approval every time, with no "remember this choice."
-2. **No automated price, menu, event, or Toast changes.** Ever. The Rail *schedules*; it does not *reconfigure*.
-3. **Immutable audit log.** Every approval, rejection, publish, and data import: actor, timestamp, before/after. Append-only.
-4. **Permission is a first-class field**, not a note. Assets and legacy records carry structured permission state, and the publish path checks it.
-5. **Least-privilege by default.** New users start read-only.
-6. **No private social account access** without written owner authorization on file.
-7. **Data retention:** raw Toast imports retained 24 months; aggregates indefinitely; anything guest-identifying, 90 days maximum — and the MVP should carry none at all.
+"Friction-free only" YIELD on an OVERLOADED night means: advance seats and pre-orders, yes (they *reduce* pressure); tableside upselling that lengthens service, no.
 
 ---
 
-## 11. The 30-day MVP — what actually ships
+## 4. The money question, re-derived
 
-**Cut hard.** The brief lists eleven MVP items and twelve screens. That is not a 30-day build; it is a 30-day way to ship eleven mediocre things.
+### 4.1 What the new intelligence does to the $25K
 
-### Ships in 30 days
+It has to be said directly: **a marketing company has already been hired and paid, and Ray is considering a management company or a GM.** That materially weakens a $25,000/month fractional-CMO proposal, for three reasons.
 
-| # | Deliverable | Why it survives the cut |
+1. **There is an incumbent.** Any proposal now has to answer "what are you doing that they are not," and the honest answer cannot be "posting better."
+2. **The volume pitch is gone.** If the best nights are overloaded, "we'll fill your room" is not a benefit. It may be a threat.
+3. **Operations authority may go elsewhere.** A GM or management company would own the levers — staffing, pricing, capacity, service — that most affect the numbers. Marketing would be a supplier to that role, not the owner of it.
+
+**The honest reframing.** In a capacity-constrained institution, the value is not volume. It is **yield, routing, and capacity-free revenue** — plus the one asset nobody else can build (§7). A defensible proposal sounds like:
+
+> *"You don't need more people on Friday. You need more money per Friday, more business on the days that are empty, revenue that doesn't need a seat at all, and the Herndon story captured before it's gone. Here's the baseline, here's what's mine, here's the number at which you should fire me."*
+
+Whether that is worth $25,000/month is Ray's call and depends entirely on scope and on what the incumbent already covers. **This document does not assert that it is.** It asserts that if it is, it is for those reasons and not for reach.
+
+### 4.2 Capacity-free revenue — the central concept
+
+**Capacity-free revenue is revenue that does not consume a seat on a busy night.** In an overloaded institution it is the only honest growth vector, and it is systematically under-exploited almost everywhere.
+
+| Vector | Why it's capacity-free | Notes |
 |---|---|---|
-| 1 | **Toast CSV import + Feria dashboard** | Without a baseline there is no proof, and without proof there is no $25K |
-| 2 | **Lead Desk with SLA alerting** | The break-even path in §3 runs straight through it |
-| 3 | **Tonight at the J + Set Clock** | Runs the night and sets up The Rail |
-| 4 | **Content Vault with permission gating** | Legal exposure and re-shoot waste both live here |
-| 5 | **Approval Queue (Ray's thumb-scale view)** | Governance; the whole model collapses without it |
-| 6 | **Weekly Brief generator (PDF + email)** | The artifact Ray actually judges the engagement on |
-| 7 | **The Rail Zero** (§6.8 — QR + landing windows + expo tablet) | The differentiator, piloted for a weekend of work |
+| **Gift cards** | Sold now, redeemed on a day the buyer picks — often a slow one | Also a repeat-visit engine and a referral vector |
+| **Merchandise** | No seat, no kitchen ticket, no server time | Legacy venues under-monetize this badly (see Gruene Hall, §10) |
+| **Private events on dark/slow days** | Uses capacity that is otherwise idle | Highest contribution margin available |
+| **Advance seats / pre-commit** | Doesn't add covers — *de-risks and smooths* the ones you have | Reduces no-shows and walk-up crush |
+| **Average check on existing covers** | Same guests, more value | Only where it doesn't slow service |
 
-### Deferred to Phase 2 (days 31–90)
+### 4.3 The re-derived break-even
 
-Campaign Builder (spreadsheet-tracked in month one — and that is fine) · Legacy Engine capture tooling (**but begin interviews immediately; the tool can lag the recording**) · Community Network · Competitor Watch (a structured sheet in month one) · Weekly Brief as an interactive screen.
+**MODELED on ASSUMED inputs. Every figure requires verification.** Assumptions: incremental contribution ~40–50% on F&B, ~50–60% on private events, ~55–70% on gift cards and merch (low variable cost, though merch carries inventory).
 
-### Explicitly not built — and the reason each is a trap
+At a blended ~50%, a $25,000 fee needs roughly **$50,000/month in incremental revenue** to be contribution-neutral. Composed **without adding a single cover to a busy night**:
 
-| Not building | Why |
+| Vector | Monthly target | Consumes peak capacity? |
+|---|---|---|
+| Private events on slow/dark days (3–4 @ $9–12K) | ~$32,000 | **No** |
+| Gift cards (+25–40% on a stated base) | ~$4,000 | **No** |
+| Merchandise (establish the channel properly) | ~$3,500 | **No** |
+| Average check / attach on existing covers (+$2–3) | ~$4,500 | **No** |
+| Slow-daypart programming — **GROWTH windows only, if leadership chooses** | ~$6,000 | **No** |
+| **Total** | **~$50,000** | |
+
+Whether the private-event number is achievable depends almost entirely on whether the 200-inquiry backlog is real. If it is, months one and two come from **demand that already exists and was never worked** — no content, no reach, no promotion. That is the single least glamorous and most certain line in this document.
+
+---
+
+## 5. Feria — new logic
+
+Total sales is a bad primary metric for a capacity-constrained venue: a packed, miserable, low-attach night and a comfortable, high-attach night can post the same number.
+
+### 5.1 What Feria measures now
+
+| Metric | Why |
 |---|---|
-| Full Toast API integration | Partner approval, cost, and lead time; unjustified before The Rail Zero proves guest behavior |
-| Automated publishing without approval | Violates the governance model that makes Ray comfortable |
-| Customer identity profiles | Privacy exposure with no proportionate MVP return |
-| AI video generation | Handlebar J's asset is *real* — real ribs, real smoke, a real family. Synthetic video actively damages the thing being sold. |
-| Payroll, full CRM, public guest app | Out of scope; LYNK is the guest layer |
-| Automated pricing | Explicitly forbidden, and correctly so |
-| Unapproved outreach | Reputational risk against exactly the community relationships being built |
+| **Revenue per open hour** | The core yield metric. Normalizes a 5-hour Tuesday against a 9-hour Friday. |
+| Average check · check count | Split, never merged — they move in opposite directions and mean different things |
+| **Food and drink attach rate** | A cover-only guest and a dinner guest are different businesses |
+| Event revenue · advance-seat revenue | |
+| Private-event pipeline | The capacity-free engine |
+| Gift-card revenue · merchandise revenue | **Promoted to first-class metrics**, not footnotes |
+| **Labor pressure** (labor hrs ÷ sales, and vs. plan) | A strain signal, not just a cost line |
+| **Kitchen ticket pressure** (ticket times, peak concurrency) | Feeds the demand state |
+| **Guest complaints** | Manual, one tap. The earliest OVERLOADED warning there is. |
+| **Repeat behavior** | Anonymized/aggregate only (§6) |
+| **Revenue from desired vs. undesired business mix** | See the guardrail below |
+
+### 5.2 The four judgments the dashboard must never make
+
+- **A full room is not automatically a success.** Full + low attach + complaints + staff strain is a bad night that looks like a good one on a sales report.
+- **An empty table is not automatically a failure.** Slack on a Tuesday is inventory for private events.
+- **Turnover is not automatically desirable.** People staying is the product.
+- **More reservations are not automatically better** if they damage the experience.
+
+### 5.3 "Desired vs. undesired business" — the guardrail
+
+This metric is genuinely useful and genuinely dangerous, so its definition is constrained in the schema and not left to interpretation.
+
+**Business mix may be evaluated ONLY on measurable commercial behavior:** attach rate, spend per occupied hour, advance-commitment rate, repeat rate, no-show rate, staff-load and complaint incidence associated with a booking type, and promotion-source margin (e.g. deep-discount channels that produce non-repeating, low-attach traffic).
+
+**It may never be defined by, segmented on, or proxied to any characteristic of guests as people.** No demographic fields, no neighborhood inference, no appearance, no group-identity attributes — none of it enters this model, and the schema carries no column that could hold it.
+
+The legitimate question is *"which booking types and promotion channels produce business that is good for this venue?"* — for example, discovering that a discount channel produces guests who occupy a peak table for two hours at a $12 check and never return, while the Herndon Brothers advance-seat package produces $60 checks and repeat visits. That is a channel and offer finding, and it is what this metric exists for.
 
 ---
 
-## 12. The 30-day success test
+## 6. Data rules — unchanged, and reinforced
 
-Emily proves value or she doesn't. The test is declared **before** day 1, not assembled on day 29.
+- CSV/spreadsheet exports from Toast only. **No unauthorized direct access.**
+- **No payment details.** The importer rejects a file containing a payment column rather than silently dropping it.
+- No unnecessary personal customer information. Anonymized or aggregated wherever possible.
+- Repeat behavior is measured in **aggregate cohorts**, never individual guest profiles, in the MVP.
+- No private social account access without written owner authorization.
+- **No automated publishing of high-risk content**; memorial, youth/school, artist, and guest content requires per-item explicit approval.
+- **No automated changes to prices, menu items, events, capacity, or Toast settings. Ever.**
+- Immutable, append-only audit log: actor, timestamp, before/after.
+- Retention: raw imports 24 months; aggregates indefinitely; anything guest-identifying 90 days max — and the MVP should carry none.
 
-### The four buckets — never merged
+---
 
-| Bucket | Definition | How it's proven |
+## 7. Modules
+
+### 7.1 Demand Grid **MVP-1**
+The 7-day × daypart state grid (§3). Opens honest: mostly `UNKNOWN`. Primary actions: set state, set mode on a cell, log capacity, open the cell's evidence.
+
+### 7.2 Feria **MVP-4**
+§5 logic. Leads with revenue per open hour and the capacity-free lines, not total sales.
+
+### 7.3 Event & Calendar Accuracy **MVP-3**
+Deliberately unglamorous and deliberately third. Hours, band listings, cover, dance lessons, closures, holiday hours — correct on the site, on Google Business, and on social profiles.
+
+**Why it outranks content:** for an institution where demand already exists, wrong information is a pure, silent revenue leak — people who tried to come and couldn't work out when or whether to. It is the cheapest fix in hospitality and the most commonly skipped.
+
+### 7.4 Content & Campaign Mode Selection **MVP-5**
+Every content item and campaign is **stamped with the operating mode and demand state it targets** at creation. A campaign aimed at an OVERLOADED cell cannot be scheduled. Carries objective, audience, offer, assets, tracking code, owner, dates, success threshold, **kill threshold**, and the §9 impact classification.
+
+### 7.5 Lead Desk **MVP-6**
+Pipeline `NEW → QUALIFIED → QUOTED → DEPOSIT → BOOKED → COMPLETED → REPEAT/REFERRAL`. Opens on **leads aging past SLA**, not new ones. Every record carries an `evidence` field.
+
+**New in v2 — date routing.** The Lead Desk is now a **routing tool**: when an inquiry's preferred date falls on an OVERLOADED cell, the desk surfaces open alternative dates for the operator to offer. This is the clearest expression of the corrected mission — sending the right business to the right day — and it is worth real money on both sides of the trade.
+
+### 7.6 Legacy Engine Lite **MVP-7**
+Deliberately "Lite": a structured place to record interviews, tag archival photographs, and hold permission state. Not a publishing engine yet.
+
+**Ranked ahead of the full Rail on purpose.** It is the only asset here a competitor cannot buy, and archival memory is perishable — the people who hold these stories will not always be available to tell them. **Start the interviews in week one regardless of what else slips.** This has been the same recommendation since v1 and the new intelligence strengthens it: in INSTITUTION MODE, legacy capture is one of the few always-permitted actions in the suppression matrix.
+
+### 7.7 Approval Queue **MVP (cross-cutting)**
+Thumb-scale for whoever holds authority. States: `Draft → Needs review → Approved / Rejected → Scheduled → Published → Archived`. Every item carries the §9 impact classification.
+
+### 7.8 Deferred to Phase 2
+Community Network (with the no-bulk-outreach constraint enforced in code) · Competitor Watch (§10) · Weekly Brief as an interactive screen · full Campaign Builder · Legacy Engine publishing.
+
+---
+
+## 8. The Rail Zero — demoted, narrowed, approval-gated
+
+**Status: an optional operational experiment. Not the center of Handlebar J's business. Not approved. Not scheduled.**
+
+### 8.1 What it is now permitted to claim
+
+Exactly one hypothesis: **that letting a guest request a timing window can reduce kitchen surges during music breaks without harming the guest experience.**
+
+It may **not** claim, and this system may not market it as: faster service, better table turns, higher throughput, or an improved guest experience. Those are either unproven or actively contrary to what the venue wants.
+
+### 8.2 Pilot constraints — all mandatory
+
+- **Requires management approval** (Ray, Joanne, GM, or management company) before it runs.
+- **One event only.**
+- Timing windows: **NOW · NEXT BREAK · SECOND BREAK · LAST CALL**.
+- **No Toast integration.** The Rail schedules a request; staff transact in Toast exactly as they do today.
+- **No cover-credit accounting.**
+- **No automatic song-triggered offers.**
+- **No promise of faster service** anywhere in the guest-facing copy.
+- **Staff can pause or disable it instantly**, from the floor, without calling anyone. A kill switch that requires permission is not a kill switch.
+- The pilot must record whether it produced **benefit or additional complexity** — and the debrief form must make "this made the night harder" as easy to record as "this helped."
+
+### 8.3 Deferred until the first pilot proves guest AND staff adoption
+
+**Boot Tag · cover-to-tab credit · song-triggered offers · The Round · zone routing · any Toast API work.** All of it. These were v1's most interesting ideas and they are all downstream of a question that has not been asked yet.
+
+### 8.4 Why it still belongs in the document
+
+The kitchen-surge problem at set breaks is real and specific to music venues, and no POS models it. If the pilot works, it is a genuine contribution. If it doesn't, it cost one event and a QR code. What it must not do is drive the product thesis — which was v1's mistake.
+
+**Success is not "guests used it." Success is "expo and the floor lead said the night was easier, and no guest experience got worse."** If guests love it and the kitchen hates it, the pilot failed.
+
+---
+
+## 9. Roles, authority, and handoff-readiness
+
+Ray may hire a GM or a management company. **J COMMAND must be role-neutral and survive that handoff without a rebuild.** The system serves whoever runs operations; it does not assume Emily or WCM owns the business.
+
+### 9.1 What an authorized marketing operator may NOT control
+
+Restaurant operations · staffing · pricing · Toast settings · cover policies · menu changes · event capacity · guest-service decisions.
+
+This is enforced in permissions, not documented as etiquette.
+
+### 9.2 Authorities the system supports
+
+| Authority | Scope |
+|---|---|
+| **Ray** | Full. Brand and final authority. |
+| **Joanne** | Full. Brand, operations, financial. |
+| **General Manager** | Operations, staffing, capacity, service, demand state, mode setting. |
+| **Management company** | As delegated by ownership; configurable, scoped, and logged. |
+| **Authorized marketing operator** (Emily / WCM / the incumbent agency) | Content, campaigns, lead handling, reporting. **Recommends only** on anything operational. |
+| **Floor Lead / MOD** | Tonight, demand-state logging, Rail pause. |
+| **Read-only** | Summary. |
+
+**Note:** the marketing-operator role is deliberately written so that *more than one* organization can hold it simultaneously with separate scopes and separate audit trails. Given that an agency is already engaged, that is not hypothetical.
+
+### 9.3 Impact classification — required on every recommendation
+
+No recommendation, campaign, or approval item may exist without these fields answered:
+
+| Field | Values |
+|---|---|
+| **Who approves** | Ray · Joanne · GM · management company · marketing operator · no approval needed |
+| **Affects operations?** | yes / no |
+| **Affects staffing?** | yes / no |
+| **Affects pricing?** | yes / no |
+| **Affects guest experience?** | yes / no |
+| **Disposition** | do now · test · defer · blocked by demand state |
+
+A recommendation that touches operations, staffing, or pricing is **routed to operational authority and marked as a recommendation, never an action.** This single mechanism is what makes the system safe to hand to a GM on day one of their tenure — and what stops marketing from quietly steering the restaurant.
+
+---
+
+## 10. Competitor Watch — the v1 split still holds
+
+**Competitive set (Phoenix metro):** Harold's Cave Creek Corral · Buffalo Chip Saloon · Rusty Spur Saloon · Foley Ranch Boots & BBQ · Dierks Bentley's Whiskey Row · Roosters Country · The Stillery · Scootin' Boots.
+
+**Reference archetypes (Texas institutions — study the form, don't chase them):** Gruene Hall · Billy Bob's Texas · The White Horse · Broken Spoke · John T. Floore's Country Store.
+
+**The new intelligence makes the reference set more valuable, not less.** These are institutions that are *also frequently at capacity*, and the thing to study is precisely how they monetize a room they cannot make bigger: merchandise programs, gift cards, legacy licensing, ticketed and pre-committed events, daytime and off-peak programming. That is a direct capacity-free revenue playbook from venues with the same constraint.
+
+Per-observation fields keep v1's addition of **`labor complexity`** — and gain **`capacity impact`** (does adopting this consume peak capacity?). Recommendations: `BORROW · IMPROVE · TEST · IGNORE · AVOID`.
+
+---
+
+## 11. MVP — re-prioritized
+
+| # | Deliverable | Note |
 |---|---|---|
-| **1. Already happening** | Baseline revenue on comparable days before the engagement | 90-day Toast export, pre-engagement |
-| **2. Influenced** | Revenue on nights Emily promoted, above comparable-day baseline | Same-weekday, same-season comparison |
-| **3. Directly attributed** | Revenue carrying a tracking code, QR, package SKU, or named lead | Campaign codes, Toast SKUs, Lead Desk records |
-| **4. Pipeline** | Quoted and deposited but not yet delivered | Lead Desk, with quote and deposit documents |
+| 1 | **Demand State dashboard (the Demand Grid)** | The new center. Ships honest, mostly `UNKNOWN`. |
+| 2 | **Toast CSV import** | Baseline. No API. |
+| 3 | **Event / calendar accuracy** | Cheapest real revenue in the document |
+| 4 | **Feria baseline** | §5 logic, incl. revenue per open hour |
+| 5 | **Content & campaign mode selection** | Mode + demand state stamped at creation |
+| 6 | **Lead Desk** (with date routing) | The capacity-free engine |
+| 7 | **Legacy Engine Lite** | Perishable. Start interviews week one. |
+| 8 | **Rail Zero — optional, approval-gated** | Only if management approves. Cut first if anything slips. |
 
-Bucket 3 is the only bucket Emily may claim without qualification. Bucket 2 she may claim **with the comparison shown**. Bucket 1 is never hers. Bucket 4 is a forecast and must be labeled as one.
+Plus, cross-cutting and non-optional: **roles and impact classification (§9), the approval queue, and the audit log.**
 
-### The scorecard
+### Deliberately not built
+Full Toast API · automated publishing · customer identity profiles · AI video generation (Handlebar J's asset is that it is *real*) · payroll · full CRM · public guest app · automated pricing · unapproved outreach · **and any Rail feature beyond the four timing windows.**
 
-| Metric | Day-1 baseline | Day-30 target | Source |
-|---|---|---|---|
-| Private-event inquiries | Establish | +40% | Lead Desk |
-| **Median first-response time** | Establish | **< 60 minutes** | Lead Desk |
-| Qualified leads | Establish | ≥ 12 | Lead Desk |
-| Quotes sent | Establish | ≥ 8 | Lead Desk |
-| Deposits received | Establish | ≥ 3 | Lead Desk |
-| Advance seats sold | Establish | Trend up | Manual/reservations |
-| Average check, event nights | Establish | +$2–4 | Toast |
-| Featured-item sales | Establish | 2× on featured nights | Toast |
-| Gift-card sales | Establish | +25% | Toast |
-| Merch sales | Establish | Establish channel | Toast/manual |
-| Social→booking clicks | Establish | Tracked at all | Tracking codes |
-| Content produced | 0 | 25 short-form, 5 hero, 1 walkthrough | Vault |
-| Comp + void rate, Rail nights | Establish | Down vs. baseline | Toast |
-| Revenue vs. baseline | Establish | Reported honestly, in four buckets | Feria |
+### Build reality
+The v1 estimate of ~35–48 dev-days still roughly holds — the Demand Grid and role/impact system replace scope that was cut. **That does not fit 30 calendar days for one developer.** Recommend **one developer, 45 days**, with **event/calendar accuracy and the Demand Grid shipped in week one** so the operator has something true in front of them immediately. Promising 30 days is how a relationship opens with a missed commitment.
 
-**"Establish" is not a hedge — it is the deliverable.** A venue that has never had a baseline getting a real one in 30 days has received something valuable even if every other number is flat.
+---
 
-**The uncomfortable one:** if the 200-inquiry backlog is real and unworked, month one should produce bookings from *existing* demand. That is the fastest, least glamorous, highest-certainty revenue in this entire document, and it requires no content at all.
+## 12. The 30-day success test — recalibrated
+
+The four attribution buckets are unchanged and still never merged: **already happening · influenced · directly attributed · pipeline.** Bucket 3 is the only unqualified claim; bucket 1 is never the marketer's.
+
+**What changed: volume metrics are demoted, and two protection metrics are promoted to first-class success criteria.**
+
+| Metric | Target | Why |
+|---|---|---|
+| **Demand states established** | ≥ 80% of cells off `UNKNOWN` | The whole system depends on it |
+| **Turn-away / strain logging habit** | In place, nightly | The signal nobody has |
+| Information accuracy audit | Complete, all channels | Silent leak closed |
+| Private-event inquiries → qualified → quoted → deposits | Establish → 12 → 8 → 3 | Capacity-free |
+| **Median first-response time** | < 60 minutes | Speed beats polish |
+| **Leads routed to open dates** | Tracked at all | The corrected mission, measured |
+| Gift-card revenue | +25% | Capacity-free |
+| Merchandise | Channel established | Capacity-free |
+| Revenue per open hour | Establish, then trend | Yield, not volume |
+| Average check / attach | +$2–3 | Yield |
+| **Guest complaints** | **Flat or down** | **A promotion that raises this failed, whatever it sold** |
+| **Staff strain rating** | **Flat or up** | Same |
+| Legacy interviews captured | ≥ 3 | Perishable |
+| Content produced | Volume target **only in GROWTH windows** | Content into an overloaded room is waste |
+
+**The two lines in bold are the v2 test.** A month that hits every revenue number while complaints rise and staff strain worsens is a **failed month**, and the system must be able to say so out loud. That is the difference between a marketing dashboard and an operating system for an institution.
 
 ---
 
 ## 13. Technology stack
 
-Recommended, and consistent with what WCM already runs — the Supabase submission pipeline in `lib/lynk-submissions.js` is the template.
+Unchanged from v1 and consistent with what WCM already runs: **Next.js** (App Router) · **Supabase** (Postgres + RLS + Auth — RLS maps directly onto §9's role table) · Supabase Storage · client-parsed, server-validated CSV import with a column allow-list · server-rendered HTML → PDF for reports · Resend + Twilio for SLA alerts · Vercel.
 
-| Layer | Choice | Reason |
-|---|---|---|
-| App | **Next.js (App Router)** | Already the house stack |
-| Data | **Supabase (Postgres + RLS + Auth)** | Row-level security maps directly onto the role table in §10; the anon-insert-only pattern for The Rail Zero is already proven in this repo |
-| Auth | Supabase Auth, magic link | Ray will not manage a password |
-| Files | Supabase Storage | Vault assets, permission metadata alongside |
-| CSV import | Client parse → validated server insert | Column allow-list rejects prohibited fields (§8.3) |
-| Reports | Server-rendered HTML → PDF | Weekly Brief |
-| Email/SMS | Resend + Twilio | SLA alerts; SMS matters because Emily is in a loud room |
-| Hosting | Vercel | House standard |
-| The Rail (Zero) | Static QR page → Supabase | No Toast dependency |
-| The Rail (Phase 3) | Toast Partner API | Only after the pilot earns it |
+The Rail Zero, if approved, runs as a static page over the **anon-insert-only** Supabase pattern already proven in this repo (`lib/lynk-submissions.js`, `supabase/lynk_submissions.sql`) — no Toast dependency, no reads from the client.
 
-**Explicitly rejected:** a no-code stack. The permission model, the audit log, and the import allow-list are the parts that make this defensible, and they are exactly the parts no-code platforms make hardest.
+**Explicitly rejected:** a no-code stack. The permission model, the impact classification, the suppression matrix, and the audit log are the parts that make this safe to hand to a GM — and they are exactly the parts no-code makes hardest.
 
 ---
 
-## 14. Build complexity
+## 14. How J COMMAND connects to LYNK and WCM
 
-| Component | Complexity | Est. |
-|---|---|---|
-| Toast CSV import + validation | Medium | 5–7 d |
-| Feria dashboard | Medium | 5–7 d |
-| Lead Desk + SLA | Low-Medium | 4–5 d |
-| Tonight at the J + Set Clock | Medium | 4–6 d |
-| Content Vault + permission gating | Medium | 5–7 d |
-| Approval Queue + audit log | Medium | 4–5 d |
-| Weekly Brief generator | Low-Medium | 3–4 d |
-| **The Rail Zero** | **Low** | **2–3 d** |
-| Auth, roles, RLS | Medium | 3–4 d |
-| **MVP total** | | **~35–48 dev-days** |
-
-**That does not fit in 30 calendar days for one developer.** Two honest options: two developers for a month, or one developer and a 45-day MVP. Promising 30 days with one developer is how the engagement starts with a missed commitment — the worst possible opening for a $25K/month relationship.
-
-**Recommendation:** one developer, 45 days, with **The Rail Zero shipped in week one** so there is a live, visible, differentiated thing running at Handlebar J while the rest is built.
-
-Phase 2 (Campaign Builder, Legacy Engine, Community, Competitor Watch): ~25–35 dev-days.
-Phase 3 (Toast Partner API, full Rail): ~40–60 dev-days plus partner approval lead time.
-
----
-
-## 15. Example daily Emily workflow
-
-**Tuesday**
-
-| Time | Action |
+| System | Owns |
 |---|---|
-| 8:40a | Opens J COMMAND. Recommended Action: *"Three private-event leads are past the 60-minute SLA. Estimated combined value $24K. Call Martinez first — 120 guests, December 14, a date currently open."* |
-| 8:45a | Calls Martinez. Logs the call. Moves to QUALIFIED. |
-| 9:10a | Clears two content approvals into Ray's queue. |
-| 9:30a | Feria: Saturday's rib sales up 18% vs. comparable. Tags SCALE. |
-| 10:00a | Vault: uploads Saturday's capture, tags it, flags one clip as restricted pending the artist's permission. |
-| 11:00a | Blocks Thursday's shot list in Tonight at the J. |
-| 2:00p | Sends the Martinez quote. Moves to QUOTED. Sets follow-up Friday. |
-| 4:30p | Confirms Thursday's Set Clock with the band; arms the approved Encore Board offer. |
-| 5:00p | Closes the app. Total time in-system: ~50 minutes. |
+| **Toast** | What actually sold |
+| **J COMMAND** | What kind of business is wanted, when — and what to do about it |
+| **LYNK** | Where guests take action |
+| **Grok / market watch** | What the market is doing |
+| **Rail Zero** | One narrow experiment, if approved |
+| **Ray / Joanne / GM / management company** | Authority |
+| **WCM + the incumbent agency** | Execution, in scoped lanes |
 
-The system's job is that the 8:40a screen said *"call Martinez"* instead of *"here are twelve charts."*
-
-## 16. Example weekly Ray report
-
-> **HANDLEBAR J — WEEK OF SEPT 8** *(illustrative format; figures are examples, not real data)*
->
-> **DECISIONS NEEDED FROM YOU — 3**
-> 1. Approve the December 14 private-event quote at $18,400 (120 guests). *Blocks a deposit.*
-> 2. Approve or reject the Chaparral fundraiser night concept. *Blocks a 3-week promotion runway.*
-> 3. Confirm the Encore Board offer for Herndon Brothers nights through October.
->
-> **WHAT MADE FERIA**
-> Saturday, Herndon Brothers: $14,200 · +22% vs. comparable Saturday · average check $41 (+$4) · ribs 2.1× normal · Encore Board 34 redemptions, $1,088 attributed.
->
-> **WHAT DIDN'T**
-> Wednesday: flat. The dance-lesson promotion produced 4 tracked reservations against a threshold of 15. **Recommendation: KILL the current format, TEST as a package with dinner instead.**
->
-> **PIPELINE**
-> 7 qualified · 4 quoted ($52,000) · 2 deposits ($6,400) · median first response 38 minutes (was 4.5 hours).
->
-> **NEXT 7 DAYS**
-> Legacy interview with Ray (Tuesday, 45 min) · Herndon Brothers campaign live Thursday · gift-card push begins Monday.
-
-Six minutes. Three decisions. Ray never opens a chart.
-
-## 17. Example Feria Scorecard
-
-| Line | This period | Comparable | Δ | Status |
-|---|---|---|---|---|
-| Saturday show revenue | $14,200 | $11,640 | +22% | **SCALE** |
-| Average check, event nights | $41 | $37 | +$4 | **SCALE** |
-| Ribs, featured nights | 2.1× | — | — | **SCALE** |
-| Encore Board (attributed) | $1,088 | — | new | **TEST → SCALE** |
-| Wednesday dance lesson | 4 res. | threshold 15 | −73% | **KILL** |
-| Gift cards | $2,150 | $1,720 | +25% | **IMPROVE** |
-| Comp + void %, Rail nights | 2.1% | 3.8% | −1.7pt | **SCALE** |
-| Merch | $340 | $310 | +10% | **HOLD** |
-| Private-event deposits | $6,400 | $0 | new | **SCALE** |
-
-*Illustrative figures.*
+A LYNK private-event enquiry inserts into a submissions table → lands in the Lead Desk as `NEW` with a timestamp → starts the SLA clock → **and is checked against the Demand Grid so the operator can route it to a date the venue actually wants.** That last step is the corrected mission expressed as a single join.
 
 ---
 
-## 18. How J COMMAND connects to LYNK and WCM
+## 15. Verdict
 
-| System | Owns | Audience |
-|---|---|---|
-| **Toast** | What actually sold | Operations |
-| **J COMMAND** | What to do next | Emily, Ray, Joanne, Floor Lead |
-| **THE RAIL** | What happens in the room | Guests, kitchen, floor |
-| **Grok / market watch** | What the market is doing | Feeds Competitor Watch |
-| **LYNK** | Where guests take action | Guests |
-| **WCM** | Strategy, content, technology, execution | The studio |
-| **Ray & Joanne** | Brand authority and final approval | — |
+**What the new intelligence really changed:** it converted this from a growth product into a **capacity-aware decision system**, and in doing so it made the product harder to build and much easier to defend. Anyone can build a dashboard that says "post more." Very few will build one whose first job is to refuse.
 
-**The LYNK connection is architectural, not marketing.** LYNK is already a proven pattern in this codebase — a conversion layer with a locked-down Supabase submission pipeline (`lib/lynk-submissions.js`, `supabase/lynk_submissions.sql`, anon-insert-only RLS). J COMMAND's Lead Desk is the operator-side mirror of exactly that pattern:
+**The central question is now:** *What kind of business does Handlebar J want more of — and when?*
 
-- A LYNK private-event enquiry inserts into a submissions table → **appears in the Lead Desk as NEW with a timestamp** → starts the SLA clock.
-- The Rail Zero uses the identical anon-insert-only pattern. It is the same architecture serving a different moment.
-- Campaign tracking codes generated in J COMMAND resolve to LYNK landing pages, closing the `content → attention → inquiry` loop with an actual join key instead of a guess.
+**Three things that must not slip:**
+1. **Ray's stories.** Still perishable, still week one, still the only unbuyable asset.
+2. **The turn-away and strain log.** Twenty seconds a night, and without it every demand state is a guess.
+3. **The suppression matrix.** If the system can be talked into recommending traffic for an overloaded night, none of the rest of this matters.
 
-**For WCM this is a productizable system, not a one-off.** A honky-tonk, a real-estate move desk, and a photography studio are the same shape underneath: *capture intent → route it fast → prove what converted.* J COMMAND is the operator-side half of the house platform; LYNK is the guest-side half. Handlebar J is the flagship implementation for the operator half the way Lorenzo von Barron is for the guest half.
+**And one thing to say out loud before any fee is discussed:** a marketing company is already engaged and a GM or management company may be coming. The role this system supports should be defined *after* that structure is settled, not before — and J COMMAND is built to be handed over precisely because that structure isn't settled yet.
 
 ---
 
-## 19. Roadmap
-
-| Phase | Window | Ships |
-|---|---|---|
-| **0 — Baseline** | Days 1–7 | 90-day Toast export, baseline established, money-path audit (hours, calendar, links, forms, Google Business), inquiry backlog verified |
-| **1 — MVP** | Days 1–45 | The seven items in §11, with **The Rail Zero live in week one** |
-| **2 — Depth** | Days 46–90 | Campaign Builder, Legacy Engine, Community Network, Competitor Watch, interactive brief |
-| **3 — The Rail, full** | Months 4–7 | Toast Partner API, Boot Tag, The Round, song-triggered offers, kitchen load balancing |
-| **4 — Platform** | Months 8–12 | Multi-venue. If The Rail works at Handlebar J, **every live-music venue in America has the same set-break problem, and none of them have a solution.** That is the product, and Handlebar J is the proof. |
-
----
-
-## 20. The verdict
-
-**Is the brief buildable?** Yes — at about 60% of its stated scope in the stated time.
-
-**Is it award-winning as written?** No. As written it is a very good internal dashboard, and internal dashboards do not win anything. Dashboards report on a night. **The Rail changes the night.**
-
-**What makes it award-winning:** one genuinely new idea, executed with discipline — *a venue does not run on a clock, it runs on a setlist, so ordering should too.* That idea is specific to live-music hospitality, it is testable for the cost of a QR code, it makes the guest's night better and the kitchen's night easier at the same time, and it produces measurable revenue in the average check. It is also, notably, the only part of this system a competitor cannot buy off a shelf.
-
-**The one thing that must not slip:** Ray's stories. Everything else in this document can be built in month six. Archival memory cannot be recovered once it's gone. Start the interviews in week one.
-
----
-
-*Prepared by Working Class Marketing. Nothing herein is validated against Handlebar J's operational data. §0's four buckets apply to every figure in this document.*
+*Prepared by Working Class Marketing. Nothing herein is validated against Handlebar J's operational data. §1's evidence buckets apply to every figure in this document.*
